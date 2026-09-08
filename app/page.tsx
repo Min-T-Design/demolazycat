@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import assets from '@/lib/figma-assets.json';
 import SiteSections from './site-sections';
+import { IntroCarousel } from './motion-gallery';
 import { NativeSelect } from '@/components/ui/native-select';
 const assetMap = assets as Record<string, Record<string, string>>;
 function asset(section: string, name: string) {
@@ -72,7 +73,6 @@ function Arrow({
 }
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [slide, setSlide] = useState(1);
   const [query, setQuery] = useState('');
   const [duration, setDuration] = useState('');
   return (
@@ -293,54 +293,7 @@ export default function Home() {
               <Button secondary>Explore Tours</Button>
             </div>
           </div>
-          <div className="intro-carousel">
-            <div className="intro-slides">
-              {['imgPicture', 'imgPicture1', 'imgPicture2'].map((photo, i) => (
-                <button
-                  key={photo}
-                  className={`intro-slide ${slide === i ? 'selected' : ''}`}
-                  onClick={() => setSlide(i)}
-                  aria-label={`View travel moment ${i + 1}`}
-                >
-                  <img
-                    src={asset('intro', photo)}
-                    alt="Travelers exploring the Ha Giang Loop"
-                    width="214"
-                    height="380"
-                  />
-                  <span className="video-caption">
-                    This Is Not Your Average Vietnam Tour
-                    <span>
-                      <Icon section="intro" name="imgPlay" />
-                      1:01
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="carousel-controls">
-              <Arrow
-                back
-                onClick={() => setSlide((slide + 2) % 3)}
-                label="Previous travel moment"
-              />
-              <Arrow
-                onClick={() => setSlide((slide + 1) % 3)}
-                label="Next travel moment"
-              />
-            </div>
-            <div className="pagination" aria-label="Choose travel moment">
-              {[0, 1, 2].map((i) => (
-                <button
-                  key={i}
-                  className={slide === i ? 'selected' : ''}
-                  aria-label={`Travel moment ${i + 1}`}
-                  aria-current={slide === i}
-                  onClick={() => setSlide(i)}
-                />
-              ))}
-            </div>
-          </div>
+          <IntroCarousel />
         </section>
         <SiteSections query={query} duration={duration} />
       </main>

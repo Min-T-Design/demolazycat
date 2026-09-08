@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/accordion';
 import { NativeSelect } from '@/components/ui/native-select';
 import assets from '@/lib/figma-assets.json';
+import { MomentsGallery } from './motion-gallery';
 const images = assets as Record<string, Record<string, string>>;
 const src = (section: string, name: string) => images[section]?.[name];
 function Icon({
@@ -247,12 +248,12 @@ export default function SiteSections({
     <>
       <section className="tours-section" id="tours" data-node-id="709:5700">
         <div className="tour-mountains" aria-hidden="true">
-          <div>
-            <img src={src('tours', 'imgImage61')} alt="" loading="lazy" />
-          </div>
-          <div>
-            <img src={src('tours', 'imgImage60')} alt="" loading="lazy" />
-          </div>
+          <img
+            src="/assets/tours-background.png"
+            alt=""
+            width="1728"
+            height="1152"
+          />
         </div>
         <div className="section-container">
           <SectionHeading tag="# Outstanding Tour" href="#destinations">
@@ -497,7 +498,7 @@ export default function SiteSections({
         <div className="reviews-panel">
           <img
             className="reviews-background"
-            src={src('recommendations', 'imgFrame2144771833')}
+            src="/assets/reviews-mountains.png"
             alt="Ha Giang mountains"
             loading="lazy"
           />
@@ -631,38 +632,17 @@ export default function SiteSections({
             Our <em>Moment</em> We Sharing
           </SectionHeading>
         </div>
-        <div className="moments-gallery">
-          {[
-            [1, 2, 3, 4, 5],
-            [6, 7, 8, 9, 10, 9],
-          ].map((row, r) => (
-            <div className={`moments-row row-${r}`} key={r}>
-              {row.map((n, i) => (
-                <button
-                  className="moment-photo"
-                  key={`${n}-${i}`}
-                  onClick={() =>
-                    showPhoto(
-                      'moments',
-                      Array.from({ length: 10 }, (_, x) => `imgImage${x + 1}`),
-                      n - 1,
-                      'Our moments on the Ha Giang Loop',
-                    )
-                  }
-                  aria-label={`Open Ha Giang travel photo ${n}`}
-                >
-                  <img
-                    src={src('moments', `imgImage${n}`)}
-                    width={r === 1 && (i === 0 || i === 5) ? 408 : 320}
-                    height="320"
-                    alt="Friends sharing an adventure on the Ha Giang Loop"
-                    loading="lazy"
-                  />
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
+        <MomentsGallery
+          lightboxOpen={preview !== null}
+          onOpen={(index) =>
+            showPhoto(
+              'moments',
+              Array.from({ length: 10 }, (_, x) => `imgImage${x + 1}`),
+              index,
+              'Our moments on the Ha Giang Loop',
+            )
+          }
+        />
       </section>
       <section
         className="news-section section-container"

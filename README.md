@@ -23,6 +23,10 @@ Figma-exported assets and self-hosted fonts live in `public/assets`; their mappi
 
 ## Motion
 
+- Introduction: five-card loop with one centered full-size card, two scaled side cards, previous/next buttons and keyboard arrows.
+- Moments: continuous right-to-left upper row and left-to-right lower row. Hover slows to 18% speed without resetting position. A pause control, keyboard focus, open lightbox, offscreen state and reduced-motion preferences stop motion. Click/tap opens the existing gallery dialog.
+- Regression checks: `node --experimental-strip-types --test tests/carousel.test.mjs`.
+
 - Tour hover expands the photo strip over 300 ms, linear. After the 1 ms prototype delay, it pans for 1500 ms, linear. Photo hover is 200 ms ease-out with the reference lift and scale.
 - Feature expansion reproduces the spring with mass 1, stiffness 115.2, damping 12 and duration 1.23718 s. The second card starts expanded, matching the homepage frame.
 - Keyboard focus and touch activation are supported. Reduced-motion preferences suppress animation.
