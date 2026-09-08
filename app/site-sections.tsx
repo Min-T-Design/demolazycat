@@ -15,6 +15,8 @@ import {
 import { NativeSelect } from '@/components/ui/native-select';
 import assets from '@/lib/figma-assets.json';
 import { MomentsGallery } from './motion-gallery';
+import { TourPhotoStrip } from './tour-photo-strip';
+import { FoodCarousel } from './food-carousel';
 const images = assets as Record<string, Record<string, string>>;
 const src = (section: string, name: string) => images[section]?.[name];
 function Icon({
@@ -278,31 +280,29 @@ export default function SiteSections({
                   data-node-id={`709:${5712 + tour.index}`}
                 >
                   <h3>{tour.title}</h3>
-                  <div className="tour-photo-window">
-                    <div className="tour-photo-row">
-                      {photos.map((photo, i) => (
-                        <button
-                          className="tour-photo"
-                          style={{ '--photo-index': i } as CSSProperties}
-                          key={photo}
-                          aria-label={`Open ${tour.destination} photo ${i + 1}`}
-                          onClick={() =>
-                            showPhoto('tours', photos, i, tour.title)
-                          }
-                        >
-                          <span>
-                            <img
-                              src={src('tours', photo)}
-                              alt={`${tour.destination} tour highlight ${i + 1}`}
-                              width="120"
-                              height="161"
-                              loading="lazy"
-                            />
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <TourPhotoStrip>
+                    {photos.map((photo, i) => (
+                      <button
+                        className="tour-photo"
+                        style={{ '--photo-index': i } as CSSProperties}
+                        key={photo}
+                        aria-label={`Open ${tour.destination} photo ${i + 1}`}
+                        onClick={() =>
+                          showPhoto('tours', photos, i, tour.title)
+                        }
+                      >
+                        <span>
+                          <img
+                            src={src('tours', photo)}
+                            alt={`${tour.destination} tour highlight ${i + 1}`}
+                            width="120"
+                            height="161"
+                            loading="lazy"
+                          />
+                        </span>
+                      </button>
+                    ))}
+                  </TourPhotoStrip>
                   <div className="tour-tags">
                     {[
                       ['imgCalendarMonth', '3 Days & 2 Nights'],
@@ -583,7 +583,7 @@ export default function SiteSections({
         <SectionHeading tag="# Culinary Experience" href="#moments">
           Ha Giang <em>Food Tour</em>
         </SectionHeading>
-        <div className="food-grid">
+        <FoodCarousel>
           {['imgPicture', 'imgPicture1', 'imgPicture2', 'imgPicture3'].map(
             (photo, i) => (
               <button
@@ -616,7 +616,7 @@ export default function SiteSections({
               </button>
             ),
           )}
-        </div>
+        </FoodCarousel>
       </section>
       <section
         className="moments-section"

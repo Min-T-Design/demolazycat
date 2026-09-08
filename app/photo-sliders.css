@@ -1,0 +1,121 @@
+.draggable-tour-photos {
+  position: relative;
+  cursor: grab;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+}
+.draggable-tour-photos[data-dragging='true'],
+.draggable-tour-photos[data-dragging='true'] button {
+  cursor: grabbing;
+}
+.draggable-tour-photos .tour-photo img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.draggable-tour-photos[data-manual='true'] .tour-photo {
+  transform: translateX(calc(var(--photo-index) * 76px));
+  transition: none;
+}
+.tour-photo-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3px;
+}
+.tour-photo-controls button {
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fffffff0;
+  box-shadow: 0 2px 8px #170b0220;
+}
+.tour-photo-controls img {
+  width: 20px;
+  height: 20px;
+}
+.tour-photo-controls button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  .tour-photo-controls {
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .draggable-tour-photos:is(:hover, :focus-within) .tour-photo-controls {
+    opacity: 1;
+  }
+}
+.food-slider .food-grid {
+  display: flex;
+  gap: 0;
+  margin-left: -24px;
+  touch-action: pan-y pinch-zoom;
+}
+.food-slider .food-slide {
+  flex: 0 0 25%;
+  min-width: 0;
+  padding-left: 24px;
+}
+.food-slider .food-card {
+  display: block;
+  width: 100%;
+  max-height: none;
+}
+.food-slider .food-card img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+.food-slider-controls {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .food-slider .food-slide {
+    flex-basis: 42%;
+  }
+  .food-slider [data-slot='carousel-content'] {
+    cursor: grab;
+  }
+  .food-slider [data-slot='carousel-content']:active {
+    cursor: grabbing;
+  }
+  .food-slider-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .food-slider-controls button {
+    position: static;
+    margin: 0;
+    width: 44px;
+    height: 44px;
+    color: var(--primary);
+  }
+}
+@media (max-width: 600px) {
+  .food-slider .food-grid {
+    margin-left: -16px;
+  }
+  .food-slider .food-slide {
+    flex-basis: 84%;
+    padding-left: 16px;
+  }
+  .food-slider .food-card .video-caption {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .draggable-tour-photos .tour-photo-row {
+    transition: none !important;
+  }
+  .tour-photo-controls {
+    transition: none;
+  }
+}

@@ -23,6 +23,9 @@ Figma-exported assets and self-hosted fonts live in `public/assets`; their mappi
 
 ## Motion
 
+- Tour photo strips retain their automatic hover animation, then hand off to bounded mouse/touch dragging or arrow-button/keyboard navigation. Drag gestures do not trigger the image lightbox; ordinary clicks still do.
+- Food Tour uses the installed carousel on viewports up to 1100px, with touch/mouse dragging and previous/next controls. Larger screens retain the four-column layout.
+
 - Introduction: five-card loop with one centered full-size card, two scaled side cards, previous/next buttons and keyboard arrows.
 - Moments: continuous right-to-left upper row and left-to-right lower row. Hover slows to 18% speed without resetting position. A pause control, keyboard focus, open lightbox, offscreen state and reduced-motion preferences stop motion. Click/tap opens the existing gallery dialog.
 - Regression checks: `node --experimental-strip-types --test tests/carousel.test.mjs`.
