@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+import 'lenis/dist/lenis.css';
 import './globals.css';
 import './motion-gallery.css';
 import './photo-sliders.css';
 import './trip-search.css';
+import { DesktopSmoothScroll } from './desktop-smooth-scroll';
 
 export const metadata: Metadata = {
   icons: { icon: '/assets/header-imgLogo.svg' },
@@ -18,7 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <DesktopSmoothScroll />
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,5 +1,11 @@
 'use client';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import {
   Dialog,
   DialogContent,
@@ -238,6 +244,8 @@ export default function SiteSections({
   const [reducedMotion, setReducedMotion] = useState(false);
   const [destinationOffset, setDestinationOffset] = useState(0);
   const destinationsRef = useRef<HTMLDivElement>(null);
+  const destinationPositions = useRef(new Map<string, number>());
+  const destinationAnimations = useRef<Animation[]>([]);
   const reviewsRef = useRef<HTMLDivElement>(null);
   const visibleTours = tours
     .map((tour, index) => ({ ...tour, index }))
@@ -282,6 +290,41 @@ export default function SiteSections({
     const timer = window.setInterval(() => reviewApi.scrollNext(), 4200);
     return () => window.clearInterval(timer);
   }, [reviewApi, reviewsPaused, reducedMotion, reviewsVisible]);
+  useLayoutEffect(() => {
+    const grid = destinationsRef.current;
+    const previous = destinationPositions.current;
+    if (!grid || previous.size === 0) return;
+    destinationAnimations.current.forEach((animation) => animation.cancel());
+    destinationAnimations.current = [];
+    if (!reducedMotion) {
+      const cards = grid.querySelectorAll<HTMLElement>('[data-destination-card]');
+      cards.forEach((card) => {
+        const name = card.dataset.destinationCard;
+        const oldLeft = name ? previous.get(name) : undefined;
+        if (oldLeft === undefined) return;
+        const delta = oldLeft - card.getBoundingClientRect().left;
+        if (Math.abs(delta) < 1) return;
+        const wraps = Math.abs(delta) > card.offsetWidth * 2;
+        const animation = card.animate(
+          wraps
+            ? [
+                { opacity: 0.25, transform: 'scale(0.97)' },
+                { opacity: 1, transform: 'scale(1)' },
+              ]
+            : [
+                { transform: `translate3d(${delta}px, 0, 0)` },
+                { transform: 'translate3d(0, 0, 0)' },
+              ],
+          {
+            duration: wraps ? 420 : 560,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          },
+        );
+        destinationAnimations.current.push(animation);
+      });
+    }
+    previous.clear();
+  }, [destinationOffset, reducedMotion]);
   const showPhoto = (
     section: string,
     names: string[],
@@ -289,8 +332,18 @@ export default function SiteSections({
     title: string,
   ) => setPreview({ section, names, index, title });
   const moveDestinations = (direction: number) => {
+    const grid = destinationsRef.current;
+    grid?.scrollTo({ left: 0, behavior: 'auto' });
+    destinationAnimations.current.forEach((animation) => animation.cancel());
+    destinationPositions.current = new Map(
+      Array.from(
+        grid?.querySelectorAll<HTMLElement>('[data-destination-card]') ?? [],
+      ).map((card) => [
+        card.dataset.destinationCard ?? '',
+        card.getBoundingClientRect().left,
+      ]),
+    );
     setDestinationOffset((current) => (current + direction + 6) % 6);
-    destinationsRef.current?.scrollTo({ left: 0, behavior: 'instant' });
   };
   return (
     <>
@@ -505,6 +558,7 @@ export default function SiteSections({
               <button
                 className="destination-card"
                 key={name}
+                data-destination-card={name}
                 onClick={() =>
                   showPhoto('destinations', [`imgPic${i || ''}`], 0, name)
                 }

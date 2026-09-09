@@ -19,7 +19,7 @@
 .tour-card .draggable-tour-photos[data-resting='true'] .tour-photo,
 .tour-card .draggable-tour-photos[data-resting='true'] .tour-photo-row {
   transform: translateX(0);
-  transition: transform 0.3s ease-out;
+  transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tour-photo-controls {
   position: absolute;

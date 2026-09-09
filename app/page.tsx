@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import assets from '@/lib/figma-assets.json';
 import SiteSections from './site-sections';
 import { IntroCarousel } from './motion-gallery';
@@ -80,14 +80,38 @@ function Arrow({
 }
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerCompact, setHeaderCompact] = useState(false);
   const [query, setQuery] = useState('');
   const [destination, setDestination] = useState('');
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let frame = 0;
+    const updateHeader = () => {
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY;
+      if (menuOpen || currentScrollY < 56) setHeaderCompact(false);
+      else if (Math.abs(delta) > 4) setHeaderCompact(delta > 0);
+      lastScrollY = currentScrollY;
+      frame = 0;
+    };
+    const handleScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateHeader);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [menuOpen]);
   return (
     <>
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <header className="site-header" id="top">
+      <header
+        className={`site-header${headerCompact && !menuOpen ? ' is-compact' : ''}`}
+        id="top"
+      >
         <a href="#top" aria-label="Lazy Cat home">
           <img
             className="brand-logo"

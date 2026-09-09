@@ -29,7 +29,7 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
     if (completionTimer.current) clearTimeout(completionTimer.current);
     completionTimer.current = setTimeout(
       finishAuto,
-      matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 3150,
+      matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 2300,
     );
   };
   const reset = () => {

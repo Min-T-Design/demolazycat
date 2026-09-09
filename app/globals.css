@@ -59,7 +59,7 @@
 }
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 24px;
+  scroll-padding-top: 88px;
 }
 body {
   margin: 0;
@@ -228,10 +228,70 @@ h2 em {
   height: 92px;
   display: flex;
   gap: 48px;
-  padding: 12px max(32px, calc((100% - 1528px) /2));
+  padding: 12px max(40px, calc((100% - 1760px) / 2));
   align-items: center;
-  position: relative;
-  z-index: 20;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: #fffffff2;
+  box-shadow: 0 1px 0 transparent;
+  backdrop-filter: blur(14px);
+  transition:
+    height 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s ease,
+    background-color 0.28s ease;
+}
+#main {
+  padding-top: 92px;
+}
+.site-header.is-compact {
+  height: 68px;
+  gap: 24px;
+  padding-block: 6px;
+  background: #fffffff9;
+  box-shadow: 0 10px 30px #21292a14;
+}
+.site-header .brand-logo,
+.site-header .main-nav a,
+.site-header .header-search,
+.site-header .utility-button,
+.site-header .header-actions > .pill-button,
+.site-header .menu-toggle {
+  transition:
+    width 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    min-height 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    font-size 0.28s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.site-header.is-compact .brand-logo {
+  width: 54px;
+  height: 47px;
+}
+.site-header.is-compact .main-nav a {
+  padding: 6px 10px;
+  font-size: 14px;
+}
+.site-header.is-compact .header-search {
+  width: 216px;
+  height: 44px;
+  padding-block: 10px;
+}
+.site-header.is-compact .utility-button {
+  width: 44px;
+  height: 44px;
+}
+.site-header.is-compact .header-actions > .pill-button {
+  min-height: 44px;
+  padding-block: 8px;
+  padding-inline: 18px;
+  font-size: 16px;
 }
 .brand-logo {
   width: 78.164px;
@@ -793,9 +853,27 @@ h2 em {
   }
 }
 @media (max-width: 1000px) {
+  #main {
+    padding-top: 86px;
+  }
   .site-header {
     height: 86px;
     padding-inline: 24px;
+  }
+  .site-header.is-compact {
+    height: 64px;
+  }
+  .site-header.is-compact .brand-logo {
+    width: 50px;
+    height: 44px;
+  }
+  .site-header.is-compact .header-actions > .pill-button,
+  .site-header.is-compact .menu-toggle {
+    min-height: 40px;
+    padding-block: 7px;
+  }
+  .site-header.is-compact .main-nav {
+    top: 58px;
   }
   .brand-logo {
     height: 60px;
@@ -917,6 +995,9 @@ h2 em {
     padding: 10px 20px;
     height: 80px;
     gap: 12px;
+  }
+  #main {
+    padding-top: 80px;
   }
   .brand-logo {
     width: 61px;
