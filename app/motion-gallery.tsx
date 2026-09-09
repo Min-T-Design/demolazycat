@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import assets from '@/lib/figma-assets.json';
 import { advanceCard, cardOffset } from '@/lib/carousel';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const introPhotos = [
   assets.intro.imgPicture,
@@ -83,14 +84,14 @@ export function IntroCarousel() {
           aria-label="Previous travel moment"
           onClick={() => move(-1)}
         >
-          <img className="icon" src={assets.intro.imgIconLeft} alt="" />
+          <ChevronLeft className="icon" aria-hidden="true" />
         </button>
         <button
           className="round-button"
           aria-label="Next travel moment"
           onClick={() => move(1)}
         >
-          <img className="icon" src={assets.intro.imgIconLeft1} alt="" />
+          <ChevronRight className="icon" aria-hidden="true" />
         </button>
       </div>
       <div className="pagination" aria-label="Choose travel moment">
@@ -216,32 +217,20 @@ export function MomentsGallery({
   lightboxOpen: boolean;
   onOpen: (index: number) => void;
 }) {
-  const [paused, setPaused] = useState(false);
   return (
-    <>
-      <div className="gallery-motion-control section-container">
-        <button
-          className="text-link"
-          aria-pressed={paused}
-          onClick={() => setPaused((value) => !value)}
-        >
-          {paused ? 'Play slideshow' : 'Pause slideshow'}
-        </button>
-      </div>
-      <div className="moments-gallery">
-        <MovingRow
-          photos={[1, 2, 3, 4, 5]}
-          reverse={false}
-          paused={paused || lightboxOpen}
-          onOpen={onOpen}
-        />
-        <MovingRow
-          photos={[6, 7, 8, 9, 10]}
-          reverse
-          paused={paused || lightboxOpen}
-          onOpen={onOpen}
-        />
-      </div>
-    </>
+    <div className="moments-gallery">
+      <MovingRow
+        photos={[1, 2, 3, 4, 5]}
+        reverse={false}
+        paused={lightboxOpen}
+        onOpen={onOpen}
+      />
+      <MovingRow
+        photos={[6, 7, 8, 9, 10]}
+        reverse
+        paused={lightboxOpen}
+        onOpen={onOpen}
+      />
+    </div>
   );
 }

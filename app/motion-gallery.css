@@ -28,6 +28,17 @@
 }
 .intro-loop .carousel-controls {
   z-index: 5;
+  top: calc(var(--slide-height) / 2);
+  transform: translateY(-50%);
+}
+.intro-loop .carousel-controls .round-button {
+  color: #ed5b00;
+  background: #fff;
+}
+.intro-loop .carousel-controls .icon {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5;
 }
 .moment-marquee {
   width: 100%;

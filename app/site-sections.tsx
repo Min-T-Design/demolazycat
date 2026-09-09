@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,12 @@ import assets from '@/lib/figma-assets.json';
 import { MomentsGallery } from './motion-gallery';
 import { TourPhotoStrip } from './tour-photo-strip';
 import { FoodCarousel } from './food-carousel';
+import {
+  type CarouselApi,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from '@/components/ui/carousel';
 const images = assets as Record<string, Record<string, string>>;
 const src = (section: string, name: string) => images[section]?.[name];
 function Icon({
@@ -214,28 +220,68 @@ type Preview = {
 
 export default function SiteSections({
   query = '',
-  duration = '',
+  destination = '',
 }: {
   query?: string;
-  duration?: string;
+  destination?: string;
 }) {
-  const [activeBenefit, setActiveBenefit] = useState(1);
+  const [activeBenefit, setActiveBenefit] = useState(0);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [selectedTour, setSelectedTour] = useState<number | null>(null);
   const [booking, setBooking] = useState(false);
   const [article, setArticle] = useState<number | null>(null);
   const [reviewIndex, setReviewIndex] = useState<number | null>(null);
+  const [reviewApi, setReviewApi] = useState<CarouselApi>();
+  const [reviewSlide, setReviewSlide] = useState(0);
+  const [reviewsPaused, setReviewsPaused] = useState(false);
+  const [reviewsVisible, setReviewsVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const [destinationOffset, setDestinationOffset] = useState(0);
   const destinationsRef = useRef<HTMLDivElement>(null);
+  const reviewsRef = useRef<HTMLDivElement>(null);
   const visibleTours = tours
     .map((tour, index) => ({ ...tour, index }))
     .filter(
       (t) =>
         (!query || t.title.toLowerCase().includes(query.toLowerCase())) &&
-        (!duration ||
-          duration === '3 Days 2 Nights' ||
-          (duration === '4 Days 3 Nights' && t.index === 1)),
+        (!destination ||
+          destination === 'Nearby' ||
+          t.destination
+            .toLowerCase()
+            .includes(destination.split(',')[0].toLowerCase())),
     );
+  useEffect(() => {
+    if (!reviewApi) return;
+    const update = () =>
+      setReviewSlide(reviewApi.selectedScrollSnap() % reviews.length);
+    update();
+    reviewApi.on('select', update);
+    reviewApi.on('reInit', update);
+    return () => {
+      reviewApi.off('select', update);
+      reviewApi.off('reInit', update);
+    };
+  }, [reviewApi]);
+  useEffect(() => {
+    const media = matchMedia('(prefers-reduced-motion: reduce)');
+    const sync = () => setReducedMotion(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    const observer = new IntersectionObserver(
+      ([entry]) => setReviewsVisible(entry.isIntersecting),
+      { threshold: 0.25 },
+    );
+    if (reviewsRef.current) observer.observe(reviewsRef.current);
+    return () => {
+      media.removeEventListener('change', sync);
+      observer.disconnect();
+    };
+  }, []);
+  useEffect(() => {
+    if (!reviewApi || reviewsPaused || reducedMotion || !reviewsVisible) return;
+    const timer = window.setInterval(() => reviewApi.scrollNext(), 4200);
+    return () => window.clearInterval(timer);
+  }, [reviewApi, reviewsPaused, reducedMotion, reviewsVisible]);
   const showPhoto = (
     section: string,
     names: string[],
@@ -261,10 +307,10 @@ export default function SiteSections({
           <SectionHeading tag="# Outstanding Tour" href="#destinations">
             <em>Discover</em> Lazy Cat's Tours
           </SectionHeading>
-          {(query || duration) && (
+          {(query || destination) && (
             <p className="search-results" role="status">
               {visibleTours.length} tours found{query ? ` for “${query}”` : ''}
-              {duration ? ` · ${duration}` : ''}
+              {destination ? ` · ${destination}` : ''}
             </p>
           )}
           <div className="tour-grid">
@@ -344,7 +390,6 @@ export default function SiteSections({
                       }}
                     >
                       Learn More
-                      <Icon name="imgIconLeft" />
                     </button>
                     <button
                       className="pill-button"
@@ -354,7 +399,6 @@ export default function SiteSections({
                       }}
                     >
                       Book Now
-                      <Icon section="header" name="imgIconLeft" />
                     </button>
                   </div>
                 </article>
@@ -363,8 +407,8 @@ export default function SiteSections({
           </div>
           {!visibleTours.length && (
             <p className="no-results">
-              No tours match these options. Try another duration or search for
-              Ha Giang, Ho Chi Minh or Da Nang.
+              No tours match these options. Try another destination or search
+              for Ha Giang, Ho Chi Minh or Da Nang.
             </p>
           )}
         </div>
@@ -387,7 +431,7 @@ export default function SiteSections({
               '--feature-duration': `${springDuration}s`,
             } as CSSProperties
           }
-          onMouseLeave={() => setActiveBenefit(1)}
+          onMouseLeave={() => setActiveBenefit(0)}
         >
           {benefits.map((b, i) => (
             <button
@@ -510,42 +554,90 @@ export default function SiteSections({
             >
               Why Our Customers Highly Recommend Us
             </SectionHeading>
-            <div className="review-grid" id="review-cards">
-              {reviews.map((r, i) => (
-                <button
-                  key={r.name}
-                  className="review-card"
-                  onClick={() => setReviewIndex(i)}
-                  aria-label={`Read ${r.name}'s full review`}
-                >
-                  <div className="review-author">
-                    <img
-                      src={src('recommendations', r.avatar)}
-                      width="44"
-                      height="44"
-                      alt=""
+            <div
+              ref={reviewsRef}
+              className="review-slider-wrap"
+              onPointerEnter={(event) => {
+                if (event.pointerType === 'mouse') setReviewsPaused(true);
+              }}
+              onPointerLeave={(event) => {
+                if (event.pointerType === 'mouse') setReviewsPaused(false);
+              }}
+              onPointerDown={() => setReviewsPaused(true)}
+              onPointerUp={() => setReviewsPaused(false)}
+              onPointerCancel={() => setReviewsPaused(false)}
+              onFocusCapture={() => setReviewsPaused(true)}
+              onBlurCapture={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget))
+                  setReviewsPaused(false);
+              }}
+            >
+              <Carousel
+                className="review-slider"
+                id="review-cards"
+                opts={{ align: 'start', loop: true }}
+                setApi={setReviewApi}
+                aria-label="Customer reviews"
+              >
+                <CarouselContent className="review-grid">
+                  {[...reviews, ...reviews].map((r, i) => {
+                    const isCopy = i >= reviews.length;
+                    return (
+                      <CarouselItem
+                        className="review-slide"
+                        key={`${r.name}-${isCopy ? 'copy' : 'original'}`}
+                        aria-hidden={isCopy}
+                      >
+                        <button
+                          className="review-card"
+                          tabIndex={isCopy ? -1 : 0}
+                          onClick={() => setReviewIndex(i % reviews.length)}
+                          aria-label={`Read ${r.name}'s full review`}
+                        >
+                          <div className="review-author">
+                            <img
+                              src={src('recommendations', r.avatar)}
+                              width="44"
+                              height="44"
+                              alt=""
+                            />
+                            <span>
+                              <strong>{r.name}</strong>
+                              <small>{r.source}</small>
+                            </span>
+                          </div>
+                          <p>{r.text}</p>
+                          <span
+                            className="stars"
+                            aria-label="5 out of 5 stars"
+                          >
+                            {[0, 1, 2, 3, 4].map((star) => (
+                              <Icon
+                                key={star}
+                                section="recommendations"
+                                name="imgStar"
+                              />
+                            ))}
+                          </span>
+                        </button>
+                      </CarouselItem>
+                    );
+                  })}
+                </CarouselContent>
+                <div className="review-pagination" aria-label="Choose review">
+                  {reviews.map((review, index) => (
+                    <button
+                      key={review.name}
+                      type="button"
+                      className={reviewSlide === index ? 'selected' : ''}
+                      aria-label={`Show review ${index + 1}`}
+                      aria-current={reviewSlide === index}
+                      onClick={() => reviewApi?.scrollTo(index)}
                     />
-                    <span>
-                      <strong>{r.name}</strong>
-                      <small>{r.source}</small>
-                    </span>
-                  </div>
-                  <p>{r.text}</p>
-                  <span className="stars" aria-label="5 out of 5 stars">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <Icon key={i} section="recommendations" name="imgStar" />
-                    ))}
-                  </span>
-                </button>
-              ))}
+                  ))}
+                </div>
+              </Carousel>
             </div>
-            <img
-              className="reference-pagination"
-              src={src('recommendations', 'imgPagination')}
-              width="72"
-              height="16"
-              alt=""
-            />
             <h3 className="trusted-heading">
               Trusted by <span>10+ companies</span>
             </h3>

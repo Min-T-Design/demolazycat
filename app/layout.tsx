@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import './motion-gallery.css';
 import './photo-sliders.css';
+import './trip-search.css';
 
 export const metadata: Metadata = {
   icons: { icon: '/assets/header-imgLogo.svg' },

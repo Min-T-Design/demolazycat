@@ -167,6 +167,12 @@ h2 em {
   width: 20px;
   height: 20px;
 }
+.pill-button .cta-paw {
+  width: 23px;
+  height: 23px;
+  fill: currentColor;
+  stroke: none;
+}
 .pill-button.secondary {
   color: var(--primary);
   background: #fff;
@@ -274,6 +280,15 @@ h2 em {
   border-radius: 999px;
   width: 256px;
   height: 52px;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.header-search:focus-within {
+  background: #fff;
+  box-shadow:
+    0 0 0 2px var(--primary),
+    0 8px 24px #21292a1f;
 }
 .header-search input {
   font-family: 'Poppins', sans-serif;
@@ -415,6 +430,16 @@ h2 em {
   width: 52px;
   height: 52px;
   pointer-events: auto;
+}
+@media (hover: hover) {
+  .hero .hero-controls {
+    opacity: 0;
+    transition: opacity 0.22s ease;
+  }
+  .hero:hover .hero-controls,
+  .hero:focus-within .hero-controls {
+    opacity: 1;
+  }
 }
 .hero-doodles {
   position: absolute;

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import assets from '@/lib/figma-assets.json';
 import SiteSections from './site-sections';
 import { IntroCarousel } from './motion-gallery';
-import { NativeSelect } from '@/components/ui/native-select';
+import { TripSearchFields } from './trip-search-fields';
+import { ChevronRight, PawPrint } from 'lucide-react';
 const assetMap = assets as Record<string, Record<string, string>>;
 function asset(section: string, name: string) {
   return assetMap[section]?.[name];
@@ -32,15 +33,21 @@ function Button({
   children,
   href = '#tours',
   secondary = false,
+  icon = 'chevron',
 }: {
   children: React.ReactNode;
   href?: string;
   secondary?: boolean;
+  icon?: 'chevron' | 'paw';
 }) {
   return (
     <a className={`pill-button ${secondary ? 'secondary' : ''}`} href={href}>
       {children}
-      <Icon section={secondary ? 'hero' : 'header'} name="imgIconLeft" />
+      {icon === 'paw' ? (
+        <PawPrint className="icon cta-paw" aria-hidden="true" />
+      ) : (
+        <ChevronRight className="icon" aria-hidden="true" />
+      )}
     </a>
   );
 }
@@ -74,7 +81,7 @@ function Arrow({
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [duration, setDuration] = useState('');
+  const [destination, setDestination] = useState('');
   return (
     <>
       <a href="#main" className="skip-link">
@@ -114,7 +121,7 @@ export default function Home() {
               setQuery(
                 String(new FormData(e.currentTarget).get('query') ?? ''),
               );
-              setDuration('');
+              setDestination('');
               document.getElementById('tours')?.scrollIntoView();
             }}
           >
@@ -189,7 +196,7 @@ export default function Home() {
               award-winning motorbike tours through the northern frontier.
             </p>
             <div className="button-row">
-              <Button>Book A Tour</Button>
+              <Button icon="paw">Book A Tour</Button>
               <Button secondary>Explore Tours</Button>
             </div>
           </div>
@@ -219,53 +226,13 @@ export default function Home() {
             onSubmit={(e) => {
               e.preventDefault();
               setQuery('');
-              setDuration(
-                String(new FormData(e.currentTarget).get('duration') ?? ''),
+              setDestination(
+                String(new FormData(e.currentTarget).get('destination') ?? ''),
               );
               document.getElementById('tours')?.scrollIntoView();
             }}
           >
-            <label>
-              <Icon name="imgAlarm" />
-              <span>
-                <span>All Duration</span>
-                <NativeSelect name="duration" defaultValue="">
-                  <option value="">Add duration</option>
-                  <option>2 Days 1 Night</option>
-                  <option>3 Days 2 Nights</option>
-                  <option>4 Days 3 Nights</option>
-                </NativeSelect>
-              </span>
-            </label>
-            <label>
-              <Icon name="imgCalendarMonth" />
-              <span>
-                <span>Check In-Out</span>
-                <input
-                  aria-label="Check-in date"
-                  placeholder="Add dates"
-                  onFocus={(e) => (e.currentTarget.type = 'date')}
-                  onBlur={(e) => {
-                    if (!e.currentTarget.value) e.currentTarget.type = 'text';
-                  }}
-                  name="date"
-                />
-              </span>
-            </label>
-            <label>
-              <Icon name="imgGroup" />
-              <span>
-                <span>Who</span>
-                <NativeSelect name="guests" defaultValue="">
-                  <option value="">Add guest</option>
-                  <option>1 guest</option>
-                  <option>2 guests</option>
-                  <option>3 guests</option>
-                  <option>4 guests</option>
-                  <option>5–8 guests</option>
-                </NativeSelect>
-              </span>
-            </label>
+            <TripSearchFields />
             <div className="search-action">
               <button className="pill-button" type="submit">
                 Search
@@ -289,13 +256,15 @@ export default function Home() {
               #lazycathagiangloop
             </p>
             <div className="button-row">
-              <Button href="#contact">About Lazy Cat</Button>
+              <Button href="#contact" icon="paw">
+                About Lazy Cat
+              </Button>
               <Button secondary>Explore Tours</Button>
             </div>
           </div>
           <IntroCarousel />
         </section>
-        <SiteSections query={query} duration={duration} />
+        <SiteSections query={query} destination={destination} />
       </main>
     </>
   );
