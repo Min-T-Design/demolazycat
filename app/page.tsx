@@ -4,7 +4,19 @@ import assets from '@/lib/figma-assets.json';
 import SiteSections from './site-sections';
 import { IntroCarousel } from './motion-gallery';
 import { TripSearchFields } from './trip-search-fields';
-import { ChevronRight, PawPrint } from 'lucide-react';
+import {
+  ChevronRight,
+  Menu as MenuIcon,
+  PawPrint,
+  Search,
+  X,
+} from 'lucide-react';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog';
 const assetMap = assets as Record<string, Record<string, string>>;
 function asset(section: string, name: string) {
   return assetMap[section]?.[name];
@@ -80,6 +92,7 @@ function Arrow({
 }
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
   const [query, setQuery] = useState('');
   const [destination, setDestination] = useState('');
@@ -180,7 +193,12 @@ export default function Home() {
             aria-expanded={menuOpen}
             aria-label="Toggle navigation"
           >
-            {menuOpen ? 'Close' : 'Menu'}
+            {menuOpen ? (
+              <X aria-hidden="true" />
+            ) : (
+              <MenuIcon aria-hidden="true" />
+            )}
+            <span className="sr-only">{menuOpen ? 'Close' : 'Menu'}</span>
           </button>
         </div>
       </header>
@@ -264,6 +282,15 @@ export default function Home() {
               </button>
             </div>
           </form>
+          <button
+            type="button"
+            className="mobile-search-trigger"
+            onClick={() => setMobileSearchOpen(true)}
+            aria-haspopup="dialog"
+          >
+            <span>Start your search</span>
+            <Search aria-hidden="true" />
+          </button>
         </section>
         <section className="intro section-container" id="about">
           <div className="intro-copy">
@@ -290,6 +317,46 @@ export default function Home() {
         </section>
         <SiteSections query={query} destination={destination} />
       </main>
+      <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
+        <DialogContent className="mobile-search-dialog" showCloseButton={false}>
+          <DialogTitle className="sr-only">Search Lazy Cat tours</DialogTitle>
+          <DialogClose
+            className="mobile-search-close"
+            aria-label="Close search"
+          >
+            <X aria-hidden="true" />
+          </DialogClose>
+          <form
+            className="mobile-search-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              setQuery(String(data.get('query') ?? ''));
+              setDestination(String(data.get('destination') ?? ''));
+              setMobileSearchOpen(false);
+              window.setTimeout(
+                () => document.getElementById('tours')?.scrollIntoView(),
+                120,
+              );
+            }}
+          >
+            <label className="mobile-query-field">
+              <span className="sr-only">Search tours</span>
+              <input
+                name="query"
+                placeholder="Search..."
+                autoComplete="off"
+              />
+              <Search aria-hidden="true" />
+            </label>
+            <TripSearchFields />
+            <button className="pill-button mobile-search-submit" type="submit">
+              Search
+              <Search aria-hidden="true" />
+            </button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

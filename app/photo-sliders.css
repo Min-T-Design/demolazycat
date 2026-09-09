@@ -83,6 +83,9 @@
 .food-slider-controls {
   display: none;
 }
+.food-pagination {
+  display: none;
+}
 @media (max-width: 1100px) {
   .food-slider .food-slide {
     flex-basis: 42%;
@@ -112,11 +115,15 @@
     margin-left: -16px;
   }
   .food-slider .food-slide {
-    flex-basis: 84%;
+    flex-basis: 76%;
     padding-left: 16px;
   }
   .food-slider .food-card .video-caption {
     font-size: 16px;
+  }
+  .food-pagination {
+    display: flex;
+    margin-top: 24px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

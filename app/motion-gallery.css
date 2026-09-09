@@ -83,17 +83,20 @@
 }
 @media (max-width: 600px) {
   .intro-loop {
-    --slide-width: 169px;
-    --slide-height: 300px;
-    --slide-step: 160px;
+    --slide-width: 214px;
+    --slide-height: 380px;
+    --slide-step: 242px;
+  }
+  .intro-loop .carousel-controls {
+    display: none;
   }
   .moment-group {
     gap: 16px;
     padding-right: 16px;
   }
   .moment-group .moment-photo {
-    width: 220px;
-    height: 220px;
+    width: 120px;
+    height: 120px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

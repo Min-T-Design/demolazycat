@@ -82,6 +82,20 @@ function SectionHeading({
     </div>
   );
 }
+function MobileSectionLink({
+  children,
+  href,
+}: {
+  children: React.ReactNode;
+  href: string;
+}) {
+  return (
+    <a className="mobile-section-link" href={href}>
+      {children}
+      <Icon section="tours" name="imgFi7776927" />
+    </a>
+  );
+}
 function RoundArrow({
   back = false,
   onClick,
@@ -239,10 +253,13 @@ export default function SiteSections({
   const [reviewIndex, setReviewIndex] = useState<number | null>(null);
   const [reviewApi, setReviewApi] = useState<CarouselApi>();
   const [reviewSlide, setReviewSlide] = useState(0);
+  const [tourSlide, setTourSlide] = useState(0);
   const [reviewsPaused, setReviewsPaused] = useState(false);
   const [reviewsVisible, setReviewsVisible] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [destinationOffset, setDestinationOffset] = useState(0);
+  const toursRef = useRef<HTMLDivElement>(null);
+  const benefitsRef = useRef<HTMLDivElement>(null);
   const destinationsRef = useRef<HTMLDivElement>(null);
   const destinationPositions = useRef(new Map<string, number>());
   const destinationAnimations = useRef<Animation[]>([]);
@@ -258,6 +275,21 @@ export default function SiteSections({
             .toLowerCase()
             .includes(destination.split(',')[0].toLowerCase())),
     );
+  useEffect(() => {
+    const viewport = toursRef.current;
+    if (!viewport) return;
+    const start = Math.max(
+      0,
+      visibleTours.findIndex((tour) => tour.destination === 'Ha Giang'),
+    );
+    setTourSlide(start);
+    if (!matchMedia('(max-width: 640px)').matches) return;
+    const frame = requestAnimationFrame(() => {
+      const card = viewport.querySelectorAll<HTMLElement>('.tour-card')[start];
+      if (card) viewport.scrollLeft = card.offsetLeft;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [query, destination, visibleTours.length]);
   useEffect(() => {
     if (!reviewApi) return;
     const update = () =>
@@ -297,7 +329,9 @@ export default function SiteSections({
     destinationAnimations.current.forEach((animation) => animation.cancel());
     destinationAnimations.current = [];
     if (!reducedMotion) {
-      const cards = grid.querySelectorAll<HTMLElement>('[data-destination-card]');
+      const cards = grid.querySelectorAll<HTMLElement>(
+        '[data-destination-card]',
+      );
       cards.forEach((card) => {
         const name = card.dataset.destinationCard;
         const oldLeft = name ? previous.get(name) : undefined;
@@ -366,98 +400,150 @@ export default function SiteSections({
               {destination ? ` · ${destination}` : ''}
             </p>
           )}
-          <div className="tour-grid">
-            {visibleTours.map((tour) => {
-              const photos = Array.from(
-                { length: 4 },
-                (_, i) => `imgPic${tour.index * 4 + i || ''}`,
+          <div
+            className="tour-carousel-viewport"
+            ref={toursRef}
+            onScroll={(event) => {
+              if (!matchMedia('(max-width: 640px)').matches) return;
+              const viewport = event.currentTarget;
+              const cards = Array.from(
+                viewport.querySelectorAll<HTMLElement>('.tour-card'),
               );
-              return (
-                <article
-                  className="tour-card"
-                  key={tour.title}
-                  data-node-id={`709:${5712 + tour.index}`}
-                >
-                  <h3>{tour.title}</h3>
-                  <TourPhotoStrip>
-                    {photos.map((photo, i) => (
-                      <button
-                        className="tour-photo"
-                        style={{ '--photo-index': i } as CSSProperties}
-                        key={photo}
-                        aria-label={`Open ${tour.destination} photo ${i + 1}`}
-                        onClick={() =>
-                          showPhoto('tours', photos, i, tour.title)
-                        }
-                      >
-                        <span>
-                          <img
-                            src={src('tours', photo)}
-                            alt={`${tour.destination} tour highlight ${i + 1}`}
-                            width="120"
-                            height="161"
-                            loading="lazy"
-                          />
-                        </span>
-                      </button>
-                    ))}
-                  </TourPhotoStrip>
-                  <div className="tour-tags">
-                    {[
-                      ['imgCalendarMonth', '3 Days & 2 Nights'],
-                      ['imgSupervisorAccount', '6–8 Pax'],
-                      ['imgPsychiatry', 'Vegetarian foods'],
-                      ['imgLocalDining', 'Allergy-friendly meals'],
-                    ].map(([icon, text]) => (
-                      <span key={text}>
-                        <Icon section="tours" name={icon} />
-                        {text}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="tour-price">
-                    <strong>$339</strong>
-                    <span>/Person</span>
-                    <Icon section="tours" name="imgVuesaxLinearInfoCircle" />
-                  </div>
-                  <div
-                    className="tour-features"
-                    tabIndex={0}
-                    aria-label={`Included in ${tour.destination} tour`}
+              if (!cards.length) return;
+              const center = viewport.scrollLeft + viewport.clientWidth / 2;
+              let nearest = 0;
+              let distance = Infinity;
+              cards.forEach((card, index) => {
+                const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+                const nextDistance = Math.abs(cardCenter - center);
+                if (nextDistance < distance) {
+                  distance = nextDistance;
+                  nearest = index;
+                }
+              });
+              setTourSlide(nearest);
+            }}
+          >
+            <div className="tour-grid">
+              {visibleTours.map((tour) => {
+                const photos = Array.from(
+                  { length: 4 },
+                  (_, i) => `imgPic${tour.index * 4 + i || ''}`,
+                );
+                return (
+                  <article
+                    className="tour-card"
+                    key={tour.title}
+                    data-node-id={`709:${5712 + tour.index}`}
                   >
-                    <ul>
-                      {tour.features.map((f) => (
-                        <li key={f}>
-                          <Icon section="tours" name="imgFi7776927" />
-                          {f}
-                        </li>
+                    <h3>{tour.title}</h3>
+                    <TourPhotoStrip>
+                      {photos.map((photo, i) => (
+                        <button
+                          className="tour-photo"
+                          style={{ '--photo-index': i } as CSSProperties}
+                          key={photo}
+                          aria-label={`Open ${tour.destination} photo ${i + 1}`}
+                          onClick={() =>
+                            showPhoto('tours', photos, i, tour.title)
+                          }
+                        >
+                          <span>
+                            <img
+                              src={src('tours', photo)}
+                              alt={`${tour.destination} tour highlight ${i + 1}`}
+                              width="120"
+                              height="161"
+                              loading="lazy"
+                            />
+                          </span>
+                        </button>
                       ))}
-                    </ul>
-                  </div>
-                  <div className="tour-actions">
-                    <button
-                      className="pill-button secondary"
-                      onClick={() => {
-                        setSelectedTour(tour.index);
-                        setBooking(false);
-                      }}
+                    </TourPhotoStrip>
+                    <div className="tour-tags">
+                      {[
+                        ['imgCalendarMonth', '3 Days & 2 Nights'],
+                        ['imgSupervisorAccount', '6–8 Pax'],
+                        ['imgPsychiatry', 'Vegetarian foods'],
+                        ['imgLocalDining', 'Allergy-friendly meals'],
+                      ].map(([icon, text]) => (
+                        <span key={text}>
+                          <Icon section="tours" name={icon} />
+                          {text}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="tour-price">
+                      <strong>$339</strong>
+                      <span>/Person</span>
+                      <Icon section="tours" name="imgVuesaxLinearInfoCircle" />
+                    </div>
+                    <div
+                      className="tour-features"
+                      tabIndex={0}
+                      aria-label={`Included in ${tour.destination} tour`}
                     >
-                      Learn More
-                    </button>
-                    <button
-                      className="pill-button"
-                      onClick={() => {
-                        setSelectedTour(tour.index);
-                        setBooking(true);
-                      }}
-                    >
-                      Book Now
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
+                      <ul>
+                        {tour.features.map((f) => (
+                          <li key={f}>
+                            <Icon section="tours" name="imgFi7776927" />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="tour-actions">
+                      <button
+                        className="pill-button secondary"
+                        onClick={() => {
+                          setSelectedTour(tour.index);
+                          setBooking(false);
+                        }}
+                      >
+                        Learn More
+                      </button>
+                      <button
+                        className="pill-button"
+                        onClick={() => {
+                          setSelectedTour(tour.index);
+                          setBooking(true);
+                        }}
+                      >
+                        Book Now
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
+          {visibleTours.length > 1 && (
+            <div className="pagination mobile-carousel-pagination tour-pagination">
+              {visibleTours.map((tour, index) => (
+                <button
+                  key={tour.title}
+                  type="button"
+                  className={tourSlide === index ? 'selected' : ''}
+                  aria-label={`Show tour ${index + 1}`}
+                  aria-current={tourSlide === index}
+                  onClick={() => {
+                    const card =
+                      toursRef.current?.querySelectorAll<HTMLElement>(
+                        '.tour-card',
+                      )[index];
+                    card?.scrollIntoView({
+                      behavior: reducedMotion ? 'auto' : 'smooth',
+                      block: 'nearest',
+                      inline: 'center',
+                    });
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          <MobileSectionLink href="#destinations">
+            Explore More
+          </MobileSectionLink>
           {!visibleTours.length && (
             <p className="no-results">
               No tours match these options. Try another destination or search
@@ -478,6 +564,26 @@ export default function SiteSections({
         </SectionHeading>
         <div
           className="benefit-list"
+          ref={benefitsRef}
+          onScroll={(event) => {
+            if (!matchMedia('(max-width: 640px)').matches) return;
+            const viewport = event.currentTarget;
+            const cards = Array.from(
+              viewport.querySelectorAll<HTMLElement>('.benefit-card'),
+            );
+            const center = viewport.scrollLeft + viewport.clientWidth / 2;
+            let nearest = 0;
+            let distance = Infinity;
+            cards.forEach((card, index) => {
+              const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+              const nextDistance = Math.abs(cardCenter - center);
+              if (nextDistance < distance) {
+                nearest = index;
+                distance = nextDistance;
+              }
+            });
+            setActiveBenefit(nearest);
+          }}
           style={
             {
               '--feature-ease': springEase,
@@ -494,7 +600,16 @@ export default function SiteSections({
               aria-controls={`benefit-${i}`}
               onMouseEnter={() => setActiveBenefit(i)}
               onFocus={() => setActiveBenefit(i)}
-              onClick={() => setActiveBenefit(i)}
+              onClick={(event) => {
+                setActiveBenefit(i);
+                if (matchMedia('(max-width: 640px)').matches) {
+                  event.currentTarget.scrollIntoView({
+                    behavior: reducedMotion ? 'auto' : 'smooth',
+                    block: 'nearest',
+                    inline: 'center',
+                  });
+                }
+              }}
             >
               <h3>{b.title}</h3>
               <p id={`benefit-${i}`} aria-hidden={activeBenefit !== i}>
@@ -519,6 +634,28 @@ export default function SiteSections({
             </button>
           ))}
         </div>
+        <div className="pagination mobile-carousel-pagination benefit-pagination">
+          {benefits.map((benefit, index) => (
+            <button
+              key={benefit.title}
+              type="button"
+              className={activeBenefit === index ? 'selected' : ''}
+              aria-label={`Show benefit ${index + 1}`}
+              aria-current={activeBenefit === index}
+              onClick={() => {
+                setActiveBenefit(index);
+                benefitsRef.current
+                  ?.querySelectorAll<HTMLElement>('.benefit-card')
+                  [index]?.scrollIntoView({
+                    behavior: reducedMotion ? 'auto' : 'smooth',
+                    block: 'nearest',
+                    inline: 'center',
+                  });
+              }}
+            />
+          ))}
+        </div>
+        <MobileSectionLink href="#contact">Explore More</MobileSectionLink>
       </section>
       <section
         className="destinations-section section-container"
@@ -661,10 +798,7 @@ export default function SiteSections({
                             </span>
                           </div>
                           <p>{r.text}</p>
-                          <span
-                            className="stars"
-                            aria-label="5 out of 5 stars"
-                          >
+                          <span className="stars" aria-label="5 out of 5 stars">
                             {[0, 1, 2, 3, 4].map((star) => (
                               <Icon
                                 key={star}
@@ -718,6 +852,9 @@ export default function SiteSections({
                 </div>
               ))}
             </div>
+            <MobileSectionLink href="#review-cards">
+              See More 999+ Reviews
+            </MobileSectionLink>
           </div>
         </div>
       </section>
@@ -763,6 +900,7 @@ export default function SiteSections({
             ),
           )}
         </FoodCarousel>
+        <MobileSectionLink href="#moments">Explore More</MobileSectionLink>
       </section>
       <section
         className="moments-section"
@@ -789,6 +927,9 @@ export default function SiteSections({
             )
           }
         />
+        <MobileSectionLink href="https://www.instagram.com/lazycathagiangloop/">
+          Explore More Instagram
+        </MobileSectionLink>
       </section>
       <section
         className="news-section section-container"
@@ -830,6 +971,7 @@ export default function SiteSections({
             ),
           )}
         </div>
+        <MobileSectionLink href="#news-cards">Read More</MobileSectionLink>
       </section>
       <section className="faq-section" id="faq" data-node-id="709:5900">
         <img
@@ -940,17 +1082,38 @@ export default function SiteSections({
               ))}
             </div>
             <div className="footer-column">
-              <h3>Support</h3>
+              <h3>
+                <span className="desktop-footer-only">Support</span>
+                <span className="mobile-footer-only">
+                  Terms &amp; Conditions
+                </span>
+              </h3>
               {['Legal Notice', 'Privacy Policy', 'Term and Conditions'].map(
                 (t) => (
                   <a
+                    className="desktop-footer-only"
                     href={`mailto:custumer@lazycat.com?subject=${encodeURIComponent(t)}`}
-                    key={t}
+                    key={`desktop-${t}`}
                   >
                     {t}
                   </a>
                 ),
               )}
+              {[
+                'Agent Policy',
+                'Cancellation Policy',
+                'Privacy Policy',
+                'Partner Policy',
+                'Website Terms',
+              ].map((t) => (
+                <a
+                  className="mobile-footer-only"
+                  href={`mailto:custumer@lazycat.com?subject=${encodeURIComponent(t)}`}
+                  key={`mobile-${t}`}
+                >
+                  {t}
+                </a>
+              ))}
             </div>
             <div className="footer-subscribe">
               <h3>Sign Up for Information</h3>

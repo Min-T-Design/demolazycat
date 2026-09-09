@@ -18,6 +18,7 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
   const [offset, setOffset] = useState(0);
   const [resting, setResting] = useState(false);
   const [ready, setReady] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [minimum, setMinimum] = useState(0);
   const completionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const finishAuto = () => {
@@ -26,6 +27,7 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
   };
   const begin = () => {
     setResting(false);
+    setExpanded(true);
     if (completionTimer.current) clearTimeout(completionTimer.current);
     completionTimer.current = setTimeout(
       finishAuto,
@@ -40,6 +42,7 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
     setManual(false);
     setOffset(0);
     setResting(true);
+    setExpanded(false);
   };
   const currentOffset = () => {
     const transform = getComputedStyle(row.current!).transform;
@@ -101,6 +104,7 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
       data-manual={manual}
       data-dragging={dragging}
       data-resting={resting}
+      data-open={expanded}
       tabIndex={0}
       role="group"
       aria-label="Tour photos. Drag horizontally or use the arrow buttons."
@@ -116,6 +120,10 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
         if (!event.isPrimary || event.button !== 0) return;
         suppressClick.current = false;
         setResting(false);
+        if (event.pointerType !== 'mouse' && !expanded) {
+          begin();
+          suppressClick.current = true;
+        }
         gesture.current = {
           id: event.pointerId,
           x: event.clientX,
