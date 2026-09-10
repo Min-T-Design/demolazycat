@@ -261,6 +261,10 @@ export default function SiteSections({
   const toursRef = useRef<HTMLDivElement>(null);
   const benefitsRef = useRef<HTMLDivElement>(null);
   const destinationsRef = useRef<HTMLDivElement>(null);
+  const tourSlideRef = useRef(0);
+  const activeBenefitRef = useRef(0);
+  const tourScrollFrame = useRef<number | null>(null);
+  const benefitScrollFrame = useRef<number | null>(null);
   const destinationPositions = useRef(new Map<string, number>());
   const destinationAnimations = useRef<Animation[]>([]);
   const reviewsRef = useRef<HTMLDivElement>(null);
@@ -282,6 +286,7 @@ export default function SiteSections({
       0,
       visibleTours.findIndex((tour) => tour.destination === 'Ha Giang'),
     );
+    tourSlideRef.current = start;
     setTourSlide(start);
     if (!matchMedia('(max-width: 640px)').matches) return;
     const frame = requestAnimationFrame(() => {
@@ -297,11 +302,21 @@ export default function SiteSections({
     const viewport = benefitsRef.current;
     if (!viewport || !matchMedia('(max-width: 640px)').matches) return;
     const frame = requestAnimationFrame(() => {
+      activeBenefitRef.current = 0;
       setActiveBenefit(0);
       viewport.scrollLeft = 0;
     });
     return () => cancelAnimationFrame(frame);
   }, []);
+  useEffect(
+    () => () => {
+      if (tourScrollFrame.current !== null)
+        cancelAnimationFrame(tourScrollFrame.current);
+      if (benefitScrollFrame.current !== null)
+        cancelAnimationFrame(benefitScrollFrame.current);
+    },
+    [],
+  );
   useEffect(() => {
     if (!reviewApi) return;
     const update = () =>
@@ -418,33 +433,41 @@ export default function SiteSections({
             onScroll={(event) => {
               if (!matchMedia('(max-width: 640px)').matches) return;
               const viewport = event.currentTarget;
-              const cards = Array.from(
-                viewport.querySelectorAll<HTMLElement>('.tour-card'),
-              );
-              if (!cards.length) return;
-              const center = viewport.scrollLeft + viewport.clientWidth / 2;
-              let nearest = 0;
-              let distance = Infinity;
-              cards.forEach((card, index) => {
-                const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-                const nextDistance = Math.abs(cardCenter - center);
-                if (nextDistance < distance) {
-                  distance = nextDistance;
-                  nearest = index;
+              if (tourScrollFrame.current !== null) return;
+              tourScrollFrame.current = requestAnimationFrame(() => {
+                const cards = Array.from(
+                  viewport.querySelectorAll<HTMLElement>('.tour-card'),
+                );
+                if (cards.length) {
+                  const center = viewport.scrollLeft + viewport.clientWidth / 2;
+                  let nearest = 0;
+                  let distance = Infinity;
+                  cards.forEach((card, index) => {
+                    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+                    const nextDistance = Math.abs(cardCenter - center);
+                    if (nextDistance < distance) {
+                      distance = nextDistance;
+                      nearest = index;
+                    }
+                  });
+                  if (tourSlideRef.current !== nearest) {
+                    tourSlideRef.current = nearest;
+                    setTourSlide(nearest);
+                  }
                 }
+                tourScrollFrame.current = null;
               });
-              setTourSlide(nearest);
             }}
           >
             <div className="tour-grid">
-              {visibleTours.map((tour) => {
+              {visibleTours.map((tour, cardIndex) => {
                 const photos = Array.from(
                   { length: 4 },
                   (_, i) => `imgPic${tour.index * 4 + i || ''}`,
                 );
                 return (
                   <article
-                    className="tour-card"
+                    className={`tour-card${tourSlide === cardIndex ? ' is-active' : ''}`}
                     key={tour.title}
                     data-node-id={`709:${5712 + tour.index}`}
                   >
@@ -581,21 +604,28 @@ export default function SiteSections({
           onScroll={(event) => {
             if (!matchMedia('(max-width: 640px)').matches) return;
             const viewport = event.currentTarget;
-            const cards = Array.from(
-              viewport.querySelectorAll<HTMLElement>('.benefit-card'),
-            );
-            const center = viewport.scrollLeft + viewport.clientWidth / 2;
-            let nearest = 0;
-            let distance = Infinity;
-            cards.forEach((card, index) => {
-              const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-              const nextDistance = Math.abs(cardCenter - center);
-              if (nextDistance < distance) {
-                nearest = index;
-                distance = nextDistance;
+            if (benefitScrollFrame.current !== null) return;
+            benefitScrollFrame.current = requestAnimationFrame(() => {
+              const cards = Array.from(
+                viewport.querySelectorAll<HTMLElement>('.benefit-card'),
+              );
+              const center = viewport.scrollLeft + viewport.clientWidth / 2;
+              let nearest = 0;
+              let distance = Infinity;
+              cards.forEach((card, index) => {
+                const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+                const nextDistance = Math.abs(cardCenter - center);
+                if (nextDistance < distance) {
+                  nearest = index;
+                  distance = nextDistance;
+                }
+              });
+              if (activeBenefitRef.current !== nearest) {
+                activeBenefitRef.current = nearest;
+                setActiveBenefit(nearest);
               }
+              benefitScrollFrame.current = null;
             });
-            setActiveBenefit(nearest);
           }}
           style={
             {
@@ -603,7 +633,11 @@ export default function SiteSections({
               '--feature-duration': `${springDuration}s`,
             } as CSSProperties
           }
-          onMouseLeave={() => setActiveBenefit(0)}
+          onMouseLeave={() => {
+            if (!matchMedia('(hover: hover)').matches) return;
+            activeBenefitRef.current = 0;
+            setActiveBenefit(0);
+          }}
         >
           {benefits.map((b, i) => (
             <button
@@ -611,9 +645,17 @@ export default function SiteSections({
               className={`benefit-card ${activeBenefit === i ? 'expanded' : ''}`}
               aria-expanded={activeBenefit === i}
               aria-controls={`benefit-${i}`}
-              onMouseEnter={() => setActiveBenefit(i)}
-              onFocus={() => setActiveBenefit(i)}
+              onMouseEnter={() => {
+                if (!matchMedia('(hover: hover)').matches) return;
+                activeBenefitRef.current = i;
+                setActiveBenefit(i);
+              }}
+              onFocus={() => {
+                activeBenefitRef.current = i;
+                setActiveBenefit(i);
+              }}
               onClick={(event) => {
+                activeBenefitRef.current = i;
                 setActiveBenefit(i);
                 if (matchMedia('(max-width: 640px)').matches) {
                   event.currentTarget.scrollIntoView({
@@ -656,6 +698,7 @@ export default function SiteSections({
               aria-label={`Show benefit ${index + 1}`}
               aria-current={activeBenefit === index}
               onClick={() => {
+                activeBenefitRef.current = index;
                 setActiveBenefit(index);
                 benefitsRef.current
                   ?.querySelectorAll<HTMLElement>('.benefit-card')

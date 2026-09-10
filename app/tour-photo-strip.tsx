@@ -42,21 +42,8 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
     cancelAutoFrame();
     if (mobileTrack()) {
       setReady(false);
-      setManual(true);
       setOffset(0);
-      autoFrame.current = requestAnimationFrame(() => {
-        autoFrame.current = requestAnimationFrame(() => {
-          setOffset(
-            clampPhotoOffset(
-              -Infinity,
-              row.current?.clientWidth ?? 0,
-              trackWidth(),
-            ),
-          );
-          autoFrame.current = null;
-        });
-      });
-      completionTimer.current = setTimeout(() => setReady(true), 760);
+      completionTimer.current = setTimeout(finishAuto, 980);
       return;
     }
     completionTimer.current = setTimeout(
@@ -165,8 +152,10 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
         suppressClick.current = false;
         setResting(false);
         if (mobileTrack()) {
-          if (!expandedRef.current) begin();
-          suppressClick.current = true;
+          if (!expandedRef.current) {
+            begin();
+            suppressClick.current = true;
+          }
         }
         gesture.current = {
           id: event.pointerId,
@@ -250,7 +239,7 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
                 transform: `translateX(${offset}px)`,
                 transition: dragging
                   ? 'none'
-                  : 'transform 720ms cubic-bezier(0.22, 1, 0.36, 1)',
+                  : 'transform 520ms cubic-bezier(0.22, 1, 0.36, 1)',
               }
             : undefined
         }

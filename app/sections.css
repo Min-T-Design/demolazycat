@@ -1900,6 +1900,7 @@
     scrollbar-width: none;
     overscroll-behavior-inline: contain;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y pinch-zoom;
   }
   .tour-carousel-viewport::-webkit-scrollbar {
     display: none;
@@ -1915,8 +1916,19 @@
     max-width: none;
     margin: 0;
     scroll-snap-align: center;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
     border-radius: 26px;
+    opacity: 0.82;
+    transform: scale(0.975) translateZ(0);
+    transform-origin: 50% 50%;
+    transition:
+      transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 220ms ease-out;
+    will-change: transform, opacity;
+  }
+  .tour-card.is-active {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
   }
   .tour-card > h3,
   .tour-card:is(:hover, :focus-within) > h3 {
@@ -1939,15 +1951,21 @@
     width: 97px;
     height: 130px;
   }
-  .tour-card:is(:hover, :focus-within) .tour-photo,
+  .tour-card:is(:hover, :focus-within) .tour-photo {
+    transform: translateX(0);
+  }
+  .tour-card:is(:hover, :focus-within) .tour-photo-row {
+    transform: translateX(0);
+    transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
   .draggable-tour-photos[data-open='true'] .tour-photo {
     transform: translateX(calc(var(--photo-index) * 52px));
-    transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: calc(var(--photo-index) * 24ms);
   }
-  .tour-card:is(:hover, :focus-within) .tour-photo-row,
   .draggable-tour-photos[data-open='true'] .tour-photo-row {
     transform: translateX(min(0px, calc(100% - 388px)));
-    transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 860ms cubic-bezier(0.22, 1, 0.36, 1) 90ms;
   }
   .tour-photo > span {
     border-width: 4px;
@@ -2012,16 +2030,19 @@
     margin-bottom: 24px;
   }
   .benefit-list {
+    --mobile-benefit-width: min(300px, calc(100vw - 96px));
     display: flex;
     width: calc(100% + 32px);
     margin-left: -16px;
     gap: 20px;
-    padding-inline: calc((100% - 300px) / 2);
+    padding-inline: calc((100% - var(--mobile-benefit-width)) / 2);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: calc((100% - 300px) / 2);
+    scroll-padding-inline: calc((100% - var(--mobile-benefit-width)) / 2);
     scrollbar-width: none;
     overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y pinch-zoom;
   }
   .benefit-list::-webkit-scrollbar {
     display: none;
@@ -2029,22 +2050,29 @@
   .benefit-card {
     grid-column: auto;
     grid-row: auto;
-    flex: 0 0 184px;
-    width: 184px;
+    flex: 0 0 var(--mobile-benefit-width);
+    width: var(--mobile-benefit-width);
     min-height: 289px;
     height: 289px;
     padding: 20px;
     border-radius: 24px;
     scroll-snap-align: center;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
+    opacity: 0.82;
+    transform: scale(0.97) translateZ(0);
+    transform-origin: 50% 50%;
     transition:
-      flex-basis var(--feature-duration) var(--feature-ease),
-      width var(--feature-duration) var(--feature-ease),
-      background-color var(--feature-duration) var(--feature-ease);
+      transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 200ms ease-out,
+      background-color 260ms ease-out,
+      box-shadow 260ms ease-out;
+    will-change: transform, opacity;
   }
   .benefit-card.expanded {
-    flex-basis: 300px;
-    width: 300px;
+    flex-basis: var(--mobile-benefit-width);
+    width: var(--mobile-benefit-width);
+    opacity: 1;
+    transform: scale(1) translateZ(0);
   }
   .benefit-card p,
   .benefit-card.expanded p {
@@ -2052,18 +2080,46 @@
     font-size: 14px;
     line-height: 1.5;
     -webkit-line-clamp: 6;
+    transition: opacity 160ms ease-out;
+  }
+  .benefit-card.expanded p {
+    transition-duration: 240ms;
+    transition-delay: 70ms;
   }
   .benefit-card h3 {
     font-size: 16px;
   }
+  .benefit-illustration,
   .benefit-card.expanded .benefit-illustration {
     width: 88px;
     height: 88px;
+    transition:
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 180ms ease-out;
+  }
+  .benefit-card:not(.expanded) .benefit-illustration {
+    opacity: 0.48;
+    transform: scale(0.78);
+  }
+  .benefit-cloud,
+  .benefit-card.expanded .benefit-cloud {
+    width: 106px;
+    height: 119px;
+    left: -39px;
+    bottom: -62px;
+    transition:
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 180ms ease-out;
+  }
+  .benefit-card:not(.expanded) .benefit-cloud {
+    opacity: 0.55;
+    transform: scale(1.1);
   }
   .benefit-more {
     left: 20px;
     bottom: 24px;
     font-size: 14px;
+    transition: opacity 140ms ease-out;
   }
   .benefit-pagination {
     margin: 24px auto 0;

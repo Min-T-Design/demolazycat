@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import assets from '@/lib/figma-assets.json';
 import SiteSections from './site-sections';
 import { IntroCarousel } from './motion-gallery';
@@ -287,6 +287,7 @@ export default function Home() {
             className="mobile-search-trigger"
             onClick={() => setMobileSearchOpen(true)}
             aria-haspopup="dialog"
+            aria-expanded={mobileSearchOpen}
           >
             <span>Start your search</span>
             <Search aria-hidden="true" />
@@ -318,25 +319,7 @@ export default function Home() {
         <SiteSections query={query} destination={destination} />
       </main>
       <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
-        <DialogContent
-          className="mobile-search-dialog"
-          showCloseButton={false}
-          style={
-            {
-              inset: 0,
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              width: '100dvw',
-              maxWidth: 'none',
-              height: '100dvh',
-              transform: 'none',
-              translate: 'none',
-              boxSizing: 'border-box',
-            } as CSSProperties
-          }
-        >
+        <DialogContent className="mobile-search-dialog" showCloseButton={false}>
           <form
             className="mobile-search-form"
             onSubmit={(event) => {
