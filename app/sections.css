@@ -1553,6 +1553,9 @@
   .benefits-section h2 br {
     display: none;
   }
+  .benefit-title-prefix {
+    display: block;
+  }
   .benefit-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
@@ -2012,36 +2015,54 @@
     display: flex;
     width: calc(100% + 32px);
     margin-left: -16px;
-    gap: 12px;
-    padding-inline: calc((100% - 221px) / 2);
+    gap: 20px;
+    padding-inline: calc((100% - 300px) / 2);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: calc((100% - 221px) / 2);
+    scroll-padding-inline: calc((100% - 300px) / 2);
     scrollbar-width: none;
     overscroll-behavior-inline: contain;
   }
   .benefit-list::-webkit-scrollbar {
     display: none;
   }
-  .benefit-card,
-  .benefit-card.expanded {
+  .benefit-card {
     grid-column: auto;
     grid-row: auto;
-    flex: 0 0 221px;
-    width: 221px;
+    flex: 0 0 184px;
+    width: 184px;
     min-height: 289px;
     height: 289px;
-    padding: 16px;
+    padding: 20px;
+    border-radius: 24px;
     scroll-snap-align: center;
+    scroll-snap-stop: always;
+    transition:
+      flex-basis var(--feature-duration) var(--feature-ease),
+      width var(--feature-duration) var(--feature-ease),
+      background-color var(--feature-duration) var(--feature-ease);
+  }
+  .benefit-card.expanded {
+    flex-basis: 300px;
+    width: 300px;
   }
   .benefit-card p,
   .benefit-card.expanded p {
     margin-bottom: 44px;
-    font-size: 12px;
-    line-height: 1.55;
-    -webkit-line-clamp: 7;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-line-clamp: 6;
   }
   .benefit-card h3 {
+    font-size: 16px;
+  }
+  .benefit-card.expanded .benefit-illustration {
+    width: 88px;
+    height: 88px;
+  }
+  .benefit-more {
+    left: 20px;
+    bottom: 24px;
     font-size: 14px;
   }
   .benefit-pagination {

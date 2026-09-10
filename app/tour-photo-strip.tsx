@@ -19,27 +19,55 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
   const [resting, setResting] = useState(false);
   const [ready, setReady] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const expandedRef = useRef(false);
   const [minimum, setMinimum] = useState(0);
   const completionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoFrame = useRef<number | null>(null);
+  const mobileTrack = () => matchMedia('(max-width: 640px)').matches;
+  const trackWidth = () => (mobileTrack() ? 409 : 504);
+  const cancelAutoFrame = () => {
+    if (autoFrame.current !== null) cancelAnimationFrame(autoFrame.current);
+    autoFrame.current = null;
+  };
   const finishAuto = () => {
     setOffset(clampPhotoOffset(currentOffset(), row.current?.clientWidth ?? 0));
     setReady(true);
   };
   const begin = () => {
+    if (expandedRef.current) return;
+    expandedRef.current = true;
     setResting(false);
     setExpanded(true);
     if (completionTimer.current) clearTimeout(completionTimer.current);
+    cancelAutoFrame();
+    if (mobileTrack()) {
+      setReady(false);
+      setManual(true);
+      setOffset(0);
+      autoFrame.current = requestAnimationFrame(() => {
+        autoFrame.current = requestAnimationFrame(() => {
+          setOffset(
+            clampPhotoOffset(
+              -Infinity,
+              row.current?.clientWidth ?? 0,
+              trackWidth(),
+            ),
+          );
+          autoFrame.current = null;
+        });
+      });
+      completionTimer.current = setTimeout(() => setReady(true), 760);
+      return;
+    }
     completionTimer.current = setTimeout(
       finishAuto,
-      matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? 0
-        : matchMedia('(max-width: 640px)').matches
-          ? 850
-          : 2300,
+      matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 2300,
     );
   };
   const reset = () => {
     if (completionTimer.current) clearTimeout(completionTimer.current);
+    cancelAutoFrame();
+    expandedRef.current = false;
     setReady(false);
     gesture.current = null;
     setDragging(false);
@@ -53,7 +81,7 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
     return transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m41;
   };
   const clamp = (value: number) =>
-    clampPhotoOffset(value, row.current?.clientWidth ?? 0);
+    clampPhotoOffset(value, row.current?.clientWidth ?? 0, trackWidth());
   const move = (step: number) => {
     if (completionTimer.current) clearTimeout(completionTimer.current);
     setReady(true);
@@ -63,21 +91,29 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
   };
   useEffect(() => {
     const observer = new ResizeObserver(() => {
-      setMinimum(clampPhotoOffset(-Infinity, row.current?.clientWidth ?? 0));
-      setOffset((value) =>
-        clampPhotoOffset(value, row.current?.clientWidth ?? 0),
+      setMinimum(
+        clampPhotoOffset(
+          -Infinity,
+          row.current?.clientWidth ?? 0,
+          trackWidth(),
+        ),
       );
+      setOffset((value) => clamp(value));
     });
     if (row.current) observer.observe(row.current);
     return () => {
       observer.disconnect();
       if (completionTimer.current) clearTimeout(completionTimer.current);
+      cancelAutoFrame();
     };
   }, []);
   useEffect(() => {
     const card = row.current?.closest('.tour-card');
     if (!card) return;
-    const handlePointerEnter = () => begin();
+    const handlePointerEnter = (event: Event) => {
+      if ((event as PointerEvent).pointerType === 'mouse' && !mobileTrack())
+        begin();
+    };
     const handlePointerLeave = (event: Event) => {
       const pointerEvent = event as PointerEvent;
       if (pointerEvent.pointerType === 'mouse' && !gesture.current?.moved)
@@ -85,7 +121,11 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
     };
     const handleFocusIn = (event: Event) => {
       const focusEvent = event as FocusEvent;
-      if (!card.contains(focusEvent.relatedTarget as Node | null)) begin();
+      if (
+        !mobileTrack() &&
+        !card.contains(focusEvent.relatedTarget as Node | null)
+      )
+        begin();
     };
     const handleFocusOut = (event: Event) => {
       const focusEvent = event as FocusEvent;
@@ -124,8 +164,8 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
         if (!event.isPrimary || event.button !== 0) return;
         suppressClick.current = false;
         setResting(false);
-        if (event.pointerType !== 'mouse' && !expanded) {
-          begin();
+        if (mobileTrack()) {
+          if (!expandedRef.current) begin();
           suppressClick.current = true;
         }
         gesture.current = {
@@ -149,6 +189,7 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
           if (!horizontalDrag(dx, dy)) return;
           drag.moved = true;
           if (completionTimer.current) clearTimeout(completionTimer.current);
+          cancelAutoFrame();
           setReady(true);
           event.currentTarget.setPointerCapture(event.pointerId);
           setManual(true);
@@ -209,7 +250,7 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
                 transform: `translateX(${offset}px)`,
                 transition: dragging
                   ? 'none'
-                  : 'transform 450ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+                  : 'transform 720ms cubic-bezier(0.22, 1, 0.36, 1)',
               }
             : undefined
         }

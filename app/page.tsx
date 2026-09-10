@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import assets from '@/lib/figma-assets.json';
 import SiteSections from './site-sections';
 import { IntroCarousel } from './motion-gallery';
@@ -298,7 +298,7 @@ export default function Home() {
             <h2>
               Your Best Moments Are
               <br />
-              Our Favourite <em>Memories</em>
+              {'\u00a0'}Our Favourite <em>Memories</em>
             </h2>
             <p>
               <strong>Lazy Cat Homestay</strong> is a cozy and welcoming place
@@ -318,7 +318,25 @@ export default function Home() {
         <SiteSections query={query} destination={destination} />
       </main>
       <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
-        <DialogContent className="mobile-search-dialog" showCloseButton={false}>
+        <DialogContent
+          className="mobile-search-dialog"
+          showCloseButton={false}
+          style={
+            {
+              inset: 0,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100dvw',
+              maxWidth: 'none',
+              height: '100dvh',
+              transform: 'none',
+              translate: 'none',
+              boxSizing: 'border-box',
+            } as CSSProperties
+          }
+        >
           <form
             className="mobile-search-form"
             onSubmit={(event) => {

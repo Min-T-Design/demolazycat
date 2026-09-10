@@ -294,6 +294,15 @@ export default function SiteSections({
     return () => cancelAnimationFrame(frame);
   }, [query, destination, visibleTours.length]);
   useEffect(() => {
+    const viewport = benefitsRef.current;
+    if (!viewport || !matchMedia('(max-width: 640px)').matches) return;
+    const frame = requestAnimationFrame(() => {
+      setActiveBenefit(0);
+      viewport.scrollLeft = 0;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  useEffect(() => {
     if (!reviewApi) return;
     const update = () =>
       setReviewSlide(reviewApi.selectedScrollSnap() % reviews.length);
@@ -561,9 +570,10 @@ export default function SiteSections({
         data-node-id="709:5715"
       >
         <SectionHeading tag="# Outstanding value" href="#contact">
-          Lazy Cat The <em>Best Choice</em>
+          <span className="benefit-title-prefix">Lazy Cat The</span>{' '}
+          <em>Best Choice</em>
           <br />
-          For Great Experience
+          {'\u00a0'}For Great Experience
         </SectionHeading>
         <div
           className="benefit-list"

@@ -111,6 +111,9 @@
   }
 }
 @media (max-width: 600px) {
+  .draggable-tour-photos[data-manual='true'] .tour-photo {
+    transform: translateX(calc(var(--photo-index) * 52px));
+  }
   .food-slider .food-grid {
     margin-left: -16px;
   }

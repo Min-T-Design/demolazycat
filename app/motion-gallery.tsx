@@ -17,6 +17,7 @@ export function IntroCarousel() {
   const [active, setActive] = useState(1);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const slides = useRef<HTMLDivElement>(null);
   const swipe = useRef<{
     id: number;
     x: number;
@@ -26,19 +27,86 @@ export function IntroCarousel() {
   const suppressClick = useRef(false);
   const move = (step: number) =>
     setActive((current) => advanceCard(current, step));
-  const finishSwipe = (pointerId?: number, clientX?: number) => {
-    const gesture = swipe.current;
-    if (!gesture || (pointerId !== undefined && gesture.id !== pointerId))
-      return;
-    const distance = (clientX ?? gesture.x) - gesture.x;
-    if (gesture.moved) {
-      suppressClick.current = true;
-      if (Math.abs(distance) >= 44) move(distance < 0 ? 1 : -1);
-    }
-    swipe.current = null;
-    setDragging(false);
-    setDragX(0);
-  };
+  useEffect(() => {
+    const element = slides.current;
+    if (!element) return;
+    const finish = (event?: PointerEvent) => {
+      const gesture = swipe.current;
+      if (!gesture || (event && gesture.id !== event.pointerId)) return;
+      const distance = (event?.clientX ?? gesture.x) - gesture.x;
+      if (gesture.moved) {
+        suppressClick.current = true;
+        if (Math.abs(distance) >= 44) {
+          setActive((current) => advanceCard(current, distance < 0 ? 1 : -1));
+        }
+      }
+      swipe.current = null;
+      setDragging(false);
+      setDragX(0);
+    };
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!event.isPrimary || event.button !== 0) return;
+      suppressClick.current = false;
+      swipe.current = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        moved: false,
+      };
+    };
+    const handlePointerMove = (event: PointerEvent) => {
+      const gesture = swipe.current;
+      if (!gesture || gesture.id !== event.pointerId) return;
+      const dx = event.clientX - gesture.x;
+      const dy = event.clientY - gesture.y;
+      if (!gesture.moved) {
+        if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
+          swipe.current = null;
+          return;
+        }
+        if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy)) return;
+        gesture.moved = true;
+        setDragging(true);
+        try {
+          element.setPointerCapture(event.pointerId);
+        } catch {
+          // Older embedded browsers still deliver the following pointer events.
+        }
+      }
+      event.preventDefault();
+      setDragX(Math.max(-120, Math.min(120, dx)));
+    };
+    const handlePointerUp = (event: PointerEvent) => {
+      if (swipe.current?.id !== event.pointerId) return;
+      finish(event);
+      try {
+        if (element.hasPointerCapture(event.pointerId)) {
+          element.releasePointerCapture(event.pointerId);
+        }
+      } catch {
+        // Pointer capture is an enhancement, not a requirement for the swipe.
+      }
+    };
+    const handlePointerCancel = () => {
+      swipe.current = null;
+      setDragging(false);
+      setDragX(0);
+    };
+    element.addEventListener('pointerdown', handlePointerDown);
+    element.addEventListener('pointermove', handlePointerMove, {
+      passive: false,
+    });
+    element.addEventListener('pointerup', handlePointerUp);
+    element.addEventListener('pointercancel', handlePointerCancel);
+    element.addEventListener('lostpointercapture', handlePointerCancel);
+    return () => {
+      element.removeEventListener('pointerdown', handlePointerDown);
+      element.removeEventListener('pointermove', handlePointerMove);
+      element.removeEventListener('pointerup', handlePointerUp);
+      element.removeEventListener('pointercancel', handlePointerCancel);
+      element.removeEventListener('lostpointercapture', handlePointerCancel);
+    };
+  }, []);
   return (
     <section
       className="intro-carousel intro-loop"
@@ -46,6 +114,7 @@ export function IntroCarousel() {
       aria-roledescription="carousel"
     >
       <div
+        ref={slides}
         className="intro-slides"
         data-dragging={dragging}
         style={{ '--drag-x': `${dragX}px` } as CSSProperties}
@@ -61,7 +130,7 @@ export function IntroCarousel() {
                   '--offset': offset,
                   '--scale': offset === 0 ? 1 : 0.75,
                   zIndex: 3 - Math.abs(offset),
-                  opacity: Math.abs(offset) === 2 ? 0 : 1,
+                  opacity: Math.abs(offset) === 2 ? 0 : offset === 0 ? 1 : 0.8,
                 } as CSSProperties
               }
               aria-hidden={Math.abs(offset) === 2}
@@ -87,42 +156,6 @@ export function IntroCarousel() {
                 }
               }}
               onDragStart={(event) => event.preventDefault()}
-              onPointerDown={(event) => {
-                if (!event.isPrimary || event.button !== 0) return;
-                suppressClick.current = false;
-                swipe.current = {
-                  id: event.pointerId,
-                  x: event.clientX,
-                  y: event.clientY,
-                  moved: false,
-                };
-              }}
-              onPointerMove={(event) => {
-                const gesture = swipe.current;
-                if (!gesture || gesture.id !== event.pointerId) return;
-                const dx = event.clientX - gesture.x;
-                const dy = event.clientY - gesture.y;
-                if (!gesture.moved) {
-                  if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
-                    swipe.current = null;
-                    return;
-                  }
-                  if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy)) return;
-                  gesture.moved = true;
-                  setDragging(true);
-                  event.currentTarget.setPointerCapture(event.pointerId);
-                }
-                event.preventDefault();
-                setDragX(Math.max(-120, Math.min(120, dx)));
-              }}
-              onPointerUp={(event) => {
-                if (swipe.current?.id !== event.pointerId) return;
-                finishSwipe(event.pointerId, event.clientX);
-                if (event.currentTarget.hasPointerCapture(event.pointerId))
-                  event.currentTarget.releasePointerCapture(event.pointerId);
-              }}
-              onPointerCancel={() => finishSwipe()}
-              onLostPointerCapture={() => finishSwipe()}
             >
               <img
                 src={photo}
