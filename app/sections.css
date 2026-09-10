@@ -1960,12 +1960,13 @@
   }
   .draggable-tour-photos[data-open='true'] .tour-photo {
     transform: translateX(calc(var(--photo-index) * 52px));
-    transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
-    transition-delay: calc(var(--photo-index) * 24ms);
+    transition: transform 560ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: calc(var(--photo-index) * 32ms);
+    will-change: transform;
   }
   .draggable-tour-photos[data-open='true'] .tour-photo-row {
-    transform: translateX(min(0px, calc(100% - 388px)));
-    transition: transform 860ms cubic-bezier(0.22, 1, 0.36, 1) 90ms;
+    transform: translateX(0);
+    transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .tour-photo > span {
     border-width: 4px;
@@ -2035,7 +2036,9 @@
     width: calc(100% + 32px);
     margin-left: -16px;
     gap: 20px;
-    padding-inline: calc((100% - var(--mobile-benefit-width)) / 2);
+    padding: 16px calc((100% - var(--mobile-benefit-width)) / 2) 20px;
+    margin-top: -16px;
+    margin-bottom: -20px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-padding-inline: calc((100% - var(--mobile-benefit-width)) / 2);
@@ -2048,6 +2051,7 @@
     display: none;
   }
   .benefit-card {
+    --benefit-progress: 0;
     grid-column: auto;
     grid-row: auto;
     flex: 0 0 var(--mobile-benefit-width);
@@ -2058,21 +2062,19 @@
     border-radius: 24px;
     scroll-snap-align: center;
     scroll-snap-stop: normal;
-    opacity: 0.82;
-    transform: scale(0.97) translateZ(0);
+    opacity: calc(0.82 + var(--benefit-progress) * 0.18);
+    transform: translateZ(0) scale(calc(0.97 + var(--benefit-progress) * 0.03));
     transform-origin: 50% 50%;
     transition:
-      transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 200ms ease-out,
-      background-color 260ms ease-out,
-      box-shadow 260ms ease-out;
+      background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 220ms ease-out;
     will-change: transform, opacity;
+    backface-visibility: hidden;
   }
   .benefit-card.expanded {
+    --benefit-progress: 1;
     flex-basis: var(--mobile-benefit-width);
     width: var(--mobile-benefit-width);
-    opacity: 1;
-    transform: scale(1) translateZ(0);
   }
   .benefit-card p,
   .benefit-card.expanded p {
@@ -2080,11 +2082,10 @@
     font-size: 14px;
     line-height: 1.5;
     -webkit-line-clamp: 6;
-    transition: opacity 160ms ease-out;
+    transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .benefit-card.expanded p {
-    transition-duration: 240ms;
-    transition-delay: 70ms;
+    transition-duration: 220ms;
   }
   .benefit-card h3 {
     font-size: 16px;
@@ -2094,8 +2095,8 @@
     width: 88px;
     height: 88px;
     transition:
-      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 180ms ease-out;
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 160ms ease-out;
   }
   .benefit-card:not(.expanded) .benefit-illustration {
     opacity: 0.48;
@@ -2108,8 +2109,8 @@
     left: -39px;
     bottom: -62px;
     transition:
-      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 180ms ease-out;
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 160ms ease-out;
   }
   .benefit-card:not(.expanded) .benefit-cloud {
     opacity: 0.55;

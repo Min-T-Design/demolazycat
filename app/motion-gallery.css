@@ -40,6 +40,10 @@
   -webkit-user-drag: none;
   user-select: none;
 }
+.intro-loop .video-caption,
+.intro-loop .video-caption * {
+  pointer-events: none;
+}
 .intro-loop .intro-slide[aria-hidden='true'] {
   pointer-events: none;
 }

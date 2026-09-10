@@ -472,7 +472,7 @@ export default function SiteSections({
                     data-node-id={`709:${5712 + tour.index}`}
                   >
                     <h3>{tour.title}</h3>
-                    <TourPhotoStrip>
+                    <TourPhotoStrip active={tourSlide === cardIndex}>
                       {photos.map((photo, i) => (
                         <button
                           className="tour-photo"
@@ -615,6 +615,14 @@ export default function SiteSections({
               cards.forEach((card, index) => {
                 const cardCenter = card.offsetLeft + card.offsetWidth / 2;
                 const nextDistance = Math.abs(cardCenter - center);
+                const progress = Math.max(
+                  0,
+                  1 - nextDistance / (card.offsetWidth + 20),
+                );
+                card.style.setProperty(
+                  '--benefit-progress',
+                  progress.toFixed(3),
+                );
                 if (nextDistance < distance) {
                   nearest = index;
                   distance = nextDistance;

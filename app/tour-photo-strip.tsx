@@ -3,7 +3,13 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { clampPhotoOffset, horizontalDrag } from '@/lib/drag';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export function TourPhotoStrip({ children }: { children: ReactNode }) {
+export function TourPhotoStrip({
+  children,
+  active = false,
+}: {
+  children: ReactNode;
+  active?: boolean;
+}) {
   const row = useRef<HTMLDivElement>(null);
   const gesture = useRef<{
     id: number;
@@ -43,7 +49,10 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
     if (mobileTrack()) {
       setReady(false);
       setOffset(0);
-      completionTimer.current = setTimeout(finishAuto, 980);
+      completionTimer.current = setTimeout(
+        finishAuto,
+        matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 720,
+      );
       return;
     }
     completionTimer.current = setTimeout(
@@ -129,6 +138,14 @@ export function TourPhotoStrip({ children }: { children: ReactNode }) {
       card.removeEventListener('focusout', handleFocusOut);
     };
   }, []);
+  useEffect(() => {
+    if (!mobileTrack()) return;
+    const frame = requestAnimationFrame(() => {
+      if (active) begin();
+      else reset();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [active]);
   return (
     <div
       className="tour-photo-window draggable-tour-photos"

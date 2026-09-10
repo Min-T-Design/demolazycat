@@ -22,6 +22,8 @@ export function IntroCarousel() {
     id: number;
     x: number;
     y: number;
+    startedAt: number;
+    axis: 'pending' | 'horizontal' | 'vertical';
     moved: boolean;
   } | null>(null);
   const suppressClick = useRef(false);
@@ -34,9 +36,14 @@ export function IntroCarousel() {
       const gesture = swipe.current;
       if (!gesture || (event && gesture.id !== event.pointerId)) return;
       const distance = (event?.clientX ?? gesture.x) - gesture.x;
-      if (gesture.moved) {
+      const elapsed = Math.max(1, performance.now() - gesture.startedAt);
+      const velocity = Math.abs(distance) / elapsed;
+      if (gesture.axis === 'horizontal') {
         suppressClick.current = true;
-        if (Math.abs(distance) >= 44) {
+        if (
+          Math.abs(distance) >= 34 ||
+          (Math.abs(distance) >= 14 && velocity >= 0.25)
+        ) {
           setActive((current) => advanceCard(current, distance < 0 ? 1 : -1));
         }
       }
@@ -51,30 +58,34 @@ export function IntroCarousel() {
         id: event.pointerId,
         x: event.clientX,
         y: event.clientY,
+        startedAt: performance.now(),
+        axis: 'pending',
         moved: false,
       };
+      try {
+        element.setPointerCapture(event.pointerId);
+      } catch {
+        // Pointer capture is an enhancement on older embedded browsers.
+      }
     };
     const handlePointerMove = (event: PointerEvent) => {
       const gesture = swipe.current;
       if (!gesture || gesture.id !== event.pointerId) return;
       const dx = event.clientX - gesture.x;
       const dy = event.clientY - gesture.y;
-      if (!gesture.moved) {
-        if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
-          swipe.current = null;
+      if (gesture.axis === 'pending') {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 7) return;
+        if (Math.abs(dy) > Math.abs(dx) * 1.1) {
+          gesture.axis = 'vertical';
           return;
         }
-        if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy)) return;
+        gesture.axis = 'horizontal';
         gesture.moved = true;
         setDragging(true);
-        try {
-          element.setPointerCapture(event.pointerId);
-        } catch {
-          // Older embedded browsers still deliver the following pointer events.
-        }
       }
+      if (gesture.axis !== 'horizontal') return;
       event.preventDefault();
-      setDragX(Math.max(-120, Math.min(120, dx)));
+      setDragX(Math.max(-140, Math.min(140, dx * 0.9)));
     };
     const handlePointerUp = (event: PointerEvent) => {
       if (swipe.current?.id !== event.pointerId) return;
@@ -88,6 +99,7 @@ export function IntroCarousel() {
       }
     };
     const handlePointerCancel = () => {
+      if (swipe.current?.axis === 'horizontal') suppressClick.current = true;
       swipe.current = null;
       setDragging(false);
       setDragX(0);
