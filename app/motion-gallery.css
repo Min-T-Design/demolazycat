@@ -8,6 +8,13 @@
   position: relative;
   display: block;
   height: var(--slide-height);
+  touch-action: pan-y pinch-zoom;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.intro-loop .intro-slides[data-dragging='true'] {
+  cursor: grabbing;
 }
 .intro-loop .intro-slide,
 .intro-loop .intro-slide.selected {
@@ -17,11 +24,20 @@
   width: var(--slide-width);
   height: var(--slide-height);
   transform: translate(-50%, -50%)
-    translateX(calc(var(--offset) * var(--slide-step))) scale(var(--scale));
+    translateX(calc(var(--offset) * var(--slide-step) + var(--drag-x, 0px)))
+    scale(var(--scale));
   transition:
     transform 600ms cubic-bezier(0.22, 0.61, 0.36, 1),
     opacity 350ms,
     filter 600ms;
+  will-change: transform;
+}
+.intro-loop .intro-slides[data-dragging='true'] .intro-slide {
+  transition: none;
+}
+.intro-loop .intro-slide img {
+  -webkit-user-drag: none;
+  user-select: none;
 }
 .intro-loop .intro-slide[aria-hidden='true'] {
   pointer-events: none;
@@ -86,6 +102,9 @@
     --slide-width: 214px;
     --slide-height: 380px;
     --slide-step: 242px;
+    width: calc(100% + 32px);
+    max-width: none;
+    margin-inline: -16px;
   }
   .intro-loop .carousel-controls {
     display: none;

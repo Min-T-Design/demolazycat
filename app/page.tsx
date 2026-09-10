@@ -319,13 +319,6 @@ export default function Home() {
       </main>
       <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
         <DialogContent className="mobile-search-dialog" showCloseButton={false}>
-          <DialogTitle className="sr-only">Search Lazy Cat tours</DialogTitle>
-          <DialogClose
-            className="mobile-search-close"
-            aria-label="Close search"
-          >
-            <X aria-hidden="true" />
-          </DialogClose>
           <form
             className="mobile-search-form"
             onSubmit={(event) => {
@@ -340,20 +333,43 @@ export default function Home() {
               );
             }}
           >
-            <label className="mobile-query-field">
-              <span className="sr-only">Search tours</span>
-              <input
-                name="query"
-                placeholder="Search..."
-                autoComplete="off"
-              />
-              <Search aria-hidden="true" />
-            </label>
-            <TripSearchFields />
-            <button className="pill-button mobile-search-submit" type="submit">
-              Search
-              <Search aria-hidden="true" />
-            </button>
+            <header className="mobile-search-header">
+              <DialogClose
+                className="mobile-search-close"
+                aria-label="Close search"
+              >
+                <X aria-hidden="true" />
+              </DialogClose>
+              <DialogTitle>Find your perfect tour</DialogTitle>
+              <span aria-hidden="true" />
+            </header>
+            <div className="mobile-search-scroll">
+              <section className="mobile-query-card">
+                <label htmlFor="mobile-tour-query">What interests you?</label>
+                <div className="mobile-query-field">
+                  <Search aria-hidden="true" />
+                  <input
+                    id="mobile-tour-query"
+                    name="query"
+                    placeholder="Search tours or experiences"
+                    autoComplete="off"
+                  />
+                </div>
+              </section>
+              <TripSearchFields mobile />
+            </div>
+            <footer className="mobile-search-footer">
+              <button type="reset" className="mobile-search-clear">
+                Clear all
+              </button>
+              <button
+                className="pill-button mobile-search-submit"
+                type="submit"
+              >
+                <Search aria-hidden="true" />
+                Search
+              </button>
+            </footer>
           </form>
         </DialogContent>
       </Dialog>

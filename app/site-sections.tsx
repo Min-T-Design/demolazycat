@@ -286,7 +286,10 @@ export default function SiteSections({
     if (!matchMedia('(max-width: 640px)').matches) return;
     const frame = requestAnimationFrame(() => {
       const card = viewport.querySelectorAll<HTMLElement>('.tour-card')[start];
-      if (card) viewport.scrollLeft = card.offsetLeft;
+      if (card) {
+        viewport.scrollLeft =
+          card.offsetLeft - (viewport.clientWidth - card.offsetWidth) / 2;
+      }
     });
     return () => cancelAnimationFrame(frame);
   }, [query, destination, visibleTours.length]);

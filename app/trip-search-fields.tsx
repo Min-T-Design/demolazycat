@@ -1,8 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import {
   Building2,
+  ChevronDown,
   Landmark,
   MapPin,
   Minus,
@@ -61,9 +62,10 @@ const destinationOptions = [
   },
 ];
 
-export function TripSearchFields() {
+export function TripSearchFields({ mobile = false }: { mobile?: boolean }) {
+  const mobileRoot = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState<'destination' | 'dates' | 'guests' | null>(
-    null,
+    mobile ? 'destination' : null,
   );
   const [destination, setDestination] = useState('');
   const [destinationQuery, setDestinationQuery] = useState('');
@@ -76,6 +78,25 @@ export function TripSearchFields() {
   const [flex, setFlex] = useState(0);
   const [months, setMonths] = useState<string[]>([]);
   const [guests, setGuests] = useState<Guests>(emptyGuests);
+
+  useEffect(() => {
+    if (!mobile) return;
+    const form = mobileRoot.current?.closest('form');
+    if (!form) return;
+    const reset = () => {
+      setOpen('destination');
+      setDestination('');
+      setDestinationQuery('');
+      setRange(undefined);
+      setMode('dates');
+      setFlex(0);
+      setMonths([]);
+      setGuests(emptyGuests);
+    };
+    form.addEventListener('reset', reset);
+    return () => form.removeEventListener('reset', reset);
+  }, [mobile]);
+
   useEffect(() => {
     setToday(new Date(new Date().setHours(0, 0, 0, 0)));
     const media = matchMedia('(max-width: 700px)');
@@ -97,6 +118,304 @@ export function TripSearchFields() {
   const filteredDestinations = destinationOptions.filter(({ name, hint }) =>
     `${name} ${hint}`.toLowerCase().includes(destinationQuery.toLowerCase()),
   );
+
+  if (mobile) {
+    return (
+      <div className="mobile-filter-stack" ref={mobileRoot}>
+        <section
+          className={`mobile-filter-card ${open === 'destination' ? 'is-open' : ''}`}
+        >
+          <button
+            type="button"
+            className="mobile-filter-summary"
+            aria-expanded={open === 'destination'}
+            aria-controls="mobile-destination-panel"
+            onClick={() =>
+              setOpen(open === 'destination' ? null : 'destination')
+            }
+          >
+            <span>
+              <small>Where</small>
+              <strong>{destination || 'Choose a destination'}</strong>
+            </span>
+            <ChevronDown aria-hidden="true" />
+          </button>
+          {open === 'destination' && (
+            <div id="mobile-destination-panel" className="mobile-filter-panel">
+              <h3>Where do you want to go?</h3>
+              <label className="destination-search">
+                <Search size={20} aria-hidden="true" />
+                <span className="sr-only">Search destinations</span>
+                <input
+                  value={destinationQuery}
+                  onChange={(event) => setDestinationQuery(event.target.value)}
+                  placeholder="Search destinations"
+                  autoComplete="off"
+                />
+              </label>
+              <p className="mobile-filter-kicker">Suggested destinations</p>
+              <div className="destination-options" role="listbox">
+                {filteredDestinations.map(({ name, hint, Icon }, index) => (
+                  <button
+                    key={name}
+                    type="button"
+                    role="option"
+                    aria-selected={destination === name}
+                    onClick={() => {
+                      setDestination(name);
+                      setDestinationQuery('');
+                      setOpen('dates');
+                    }}
+                  >
+                    <span
+                      className={`destination-option-icon tone-${index % 4}`}
+                    >
+                      <Icon size={24} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>{name}</strong>
+                      <small>{hint}</small>
+                    </span>
+                  </button>
+                ))}
+                {!filteredDestinations.length && (
+                  <p className="destination-empty">
+                    <MapPin size={20} aria-hidden="true" />
+                    Try another destination
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section
+          className={`mobile-filter-card ${open === 'dates' ? 'is-open' : ''}`}
+        >
+          <button
+            type="button"
+            className="mobile-filter-summary"
+            aria-expanded={open === 'dates'}
+            aria-controls="mobile-dates-panel"
+            onClick={() => setOpen(open === 'dates' ? null : 'dates')}
+          >
+            <span>
+              <small>When</small>
+              <strong>{dateLabel}</strong>
+            </span>
+            <ChevronDown aria-hidden="true" />
+          </button>
+          {open === 'dates' && (
+            <div id="mobile-dates-panel" className="mobile-filter-panel">
+              <h3>When is your trip?</h3>
+              <Tabs
+                value={mode}
+                onValueChange={(value) => setMode(String(value))}
+              >
+                <TabsList className="trip-date-tabs">
+                  <TabsTrigger value="dates">Dates</TabsTrigger>
+                  <TabsTrigger value="flexible">Flexible</TabsTrigger>
+                </TabsList>
+                <TabsContent value="dates">
+                  <p className="date-instruction" aria-live="polite">
+                    {range?.from && !range.to
+                      ? 'Choose your check-out date'
+                      : 'Choose your check-in and check-out dates'}
+                  </p>
+                  <Calendar
+                    className="trip-calendar"
+                    mode="range"
+                    selected={range}
+                    onSelect={setRange}
+                    numberOfMonths={1}
+                    disabled={{ before: today }}
+                    startMonth={today}
+                    weekStartsOn={1}
+                    showOutsideDays={false}
+                    min={1}
+                  />
+                  <div
+                    className="date-flex-options"
+                    aria-label="Date flexibility"
+                  >
+                    {[0, 1, 2, 3, 7, 14].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={flex === value}
+                        onClick={() => setFlex(value)}
+                      >
+                        {value
+                          ? `± ${value} day${value > 1 ? 's' : ''}`
+                          : 'Exact dates'}
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+                <TabsContent value="flexible">
+                  <p className="date-instruction">
+                    Pick one or more months, or keep your dates open.
+                  </p>
+                  <div className="flex-months">
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const date = new Date(
+                        today.getFullYear(),
+                        today.getMonth() + i,
+                        1,
+                      );
+                      const label = date.toLocaleDateString('en-GB', {
+                        month: 'short',
+                        year: 'numeric',
+                      });
+                      return (
+                        <button
+                          type="button"
+                          key={label}
+                          aria-pressed={months.includes(label)}
+                          onClick={() =>
+                            setMonths((old) =>
+                              old.includes(label)
+                                ? old.filter((item) => item !== label)
+                                : [...old, label],
+                            )
+                          }
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </TabsContent>
+              </Tabs>
+              <div className="mobile-panel-action">
+                <button
+                  type="button"
+                  className="trip-clear"
+                  onClick={() => {
+                    setRange(undefined);
+                    setFlex(0);
+                    setMonths([]);
+                  }}
+                >
+                  Clear dates
+                </button>
+                <button
+                  type="button"
+                  className="trip-done"
+                  onClick={() => setOpen('guests')}
+                  disabled={mode === 'dates' && !!range?.from && !range.to}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section
+          className={`mobile-filter-card ${open === 'guests' ? 'is-open' : ''}`}
+        >
+          <button
+            type="button"
+            className="mobile-filter-summary"
+            aria-expanded={open === 'guests'}
+            aria-controls="mobile-guests-panel"
+            onClick={() => setOpen(open === 'guests' ? null : 'guests')}
+          >
+            <span>
+              <small>Who</small>
+              <strong>{guestSummary(guests)}</strong>
+            </span>
+            <ChevronDown aria-hidden="true" />
+          </button>
+          {open === 'guests' && (
+            <div id="mobile-guests-panel" className="mobile-filter-panel">
+              <h3>Who is coming?</h3>
+              {(
+                [
+                  ['adults', 'Adults', 'Ages 13 or above'],
+                  ['children', 'Children', 'Ages 2–12'],
+                  ['infants', 'Infants', 'Under 2'],
+                  ['pets', 'Pets', 'Contact us to confirm suitability'],
+                ] as const
+              ).map(([key, title, hint]) => (
+                <div className="guest-counter" key={key}>
+                  <div>
+                    <strong>{title}</strong>
+                    <p>{hint}</p>
+                  </div>
+                  <div className="guest-stepper">
+                    <button
+                      type="button"
+                      aria-label={`Remove ${title.toLowerCase()}`}
+                      disabled={
+                        guests[key] === 0 ||
+                        (key === 'adults' &&
+                          guests.adults === 1 &&
+                          !!(guests.children || guests.infants || guests.pets))
+                      }
+                      onClick={() =>
+                        setGuests((old) => updateGuests(old, key, -1))
+                      }
+                    >
+                      <Minus size={18} aria-hidden="true" />
+                    </button>
+                    <output aria-label={title} aria-live="polite">
+                      {guests[key]}
+                    </output>
+                    <button
+                      type="button"
+                      aria-label={`Add ${title.toLowerCase()}`}
+                      onClick={() =>
+                        setGuests((old) => updateGuests(old, key, 1))
+                      }
+                    >
+                      <Plus size={18} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <div className="mobile-panel-action">
+                <button
+                  type="button"
+                  className="trip-clear"
+                  onClick={() => setGuests(emptyGuests)}
+                >
+                  Clear guests
+                </button>
+                <button
+                  type="button"
+                  className="trip-done"
+                  onClick={() => setOpen(null)}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <input type="hidden" name="destination" value={destination} />
+        <input
+          type="hidden"
+          name="checkIn"
+          value={mode === 'dates' ? dateValue(range?.from) : ''}
+        />
+        <input
+          type="hidden"
+          name="checkOut"
+          value={mode === 'dates' ? dateValue(range?.to) : ''}
+        />
+        <input type="hidden" name="datePreference" value={dateLabel} />
+        <input
+          type="hidden"
+          name="guests"
+          value={guests.adults ? guestSummary(guests) : ''}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <Popover
@@ -115,9 +434,7 @@ export function TripSearchFields() {
           />
           <span>
             <span>Where</span>
-            <span
-              className={destination ? 'trip-value chosen' : 'trip-value'}
-            >
+            <span className={destination ? 'trip-value chosen' : 'trip-value'}>
               {destination || 'Search destination'}
             </span>
           </span>

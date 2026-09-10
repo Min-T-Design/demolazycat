@@ -15,26 +15,41 @@ const introPhotos = [
 
 export function IntroCarousel() {
   const [active, setActive] = useState(1);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const swipe = useRef<{
+    id: number;
+    x: number;
+    y: number;
+    moved: boolean;
+  } | null>(null);
+  const suppressClick = useRef(false);
   const move = (step: number) =>
     setActive((current) => advanceCard(current, step));
+  const finishSwipe = (pointerId?: number, clientX?: number) => {
+    const gesture = swipe.current;
+    if (!gesture || (pointerId !== undefined && gesture.id !== pointerId))
+      return;
+    const distance = (clientX ?? gesture.x) - gesture.x;
+    if (gesture.moved) {
+      suppressClick.current = true;
+      if (Math.abs(distance) >= 44) move(distance < 0 ? 1 : -1);
+    }
+    swipe.current = null;
+    setDragging(false);
+    setDragX(0);
+  };
   return (
-    <div
+    <section
       className="intro-carousel intro-loop"
-      role="region"
       aria-label="Travel moments"
       aria-roledescription="carousel"
-      onKeyDown={(event) => {
-        if (event.key === 'ArrowRight') {
-          event.preventDefault();
-          move(1);
-        }
-        if (event.key === 'ArrowLeft') {
-          event.preventDefault();
-          move(-1);
-        }
-      }}
     >
-      <div className="intro-slides">
+      <div
+        className="intro-slides"
+        data-dragging={dragging}
+        style={{ '--drag-x': `${dragX}px` } as CSSProperties}
+      >
         {introPhotos.map((photo, index) => {
           const offset = cardOffset(index, active);
           return (
@@ -53,7 +68,61 @@ export function IntroCarousel() {
               tabIndex={Math.abs(offset) === 2 ? -1 : 0}
               aria-label={`Travel moment ${index + 1} of 5${offset === 0 ? ', current' : ''}`}
               aria-current={offset === 0}
-              onClick={() => setActive(index)}
+              onClick={(event) => {
+                if (suppressClick.current) {
+                  event.preventDefault();
+                  suppressClick.current = false;
+                  return;
+                }
+                setActive(index);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowRight') {
+                  event.preventDefault();
+                  move(1);
+                }
+                if (event.key === 'ArrowLeft') {
+                  event.preventDefault();
+                  move(-1);
+                }
+              }}
+              onDragStart={(event) => event.preventDefault()}
+              onPointerDown={(event) => {
+                if (!event.isPrimary || event.button !== 0) return;
+                suppressClick.current = false;
+                swipe.current = {
+                  id: event.pointerId,
+                  x: event.clientX,
+                  y: event.clientY,
+                  moved: false,
+                };
+              }}
+              onPointerMove={(event) => {
+                const gesture = swipe.current;
+                if (!gesture || gesture.id !== event.pointerId) return;
+                const dx = event.clientX - gesture.x;
+                const dy = event.clientY - gesture.y;
+                if (!gesture.moved) {
+                  if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
+                    swipe.current = null;
+                    return;
+                  }
+                  if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy)) return;
+                  gesture.moved = true;
+                  setDragging(true);
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                }
+                event.preventDefault();
+                setDragX(Math.max(-120, Math.min(120, dx)));
+              }}
+              onPointerUp={(event) => {
+                if (swipe.current?.id !== event.pointerId) return;
+                finishSwipe(event.pointerId, event.clientX);
+                if (event.currentTarget.hasPointerCapture(event.pointerId))
+                  event.currentTarget.releasePointerCapture(event.pointerId);
+              }}
+              onPointerCancel={() => finishSwipe()}
+              onLostPointerCapture={() => finishSwipe()}
             >
               <img
                 src={photo}
@@ -108,7 +177,7 @@ export function IntroCarousel() {
       <span className="sr-only" aria-live="polite">
         Travel moment {active + 1} of 5
       </span>
-    </div>
+    </section>
   );
 }
 
